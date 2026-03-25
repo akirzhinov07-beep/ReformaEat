@@ -1197,8 +1197,11 @@ function buildList(type) {
     const row = document.createElement('div');
     row.className = (isBoost?'boost-row':'dish-row')+(on?' on':'');
     if(isBoost) {
+      const bImgSrc = getDrivePhotoUrl(d.photo_id);
+      const bImgHtml = bImgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${bImgSrc}" /></div>` : '';
       row.innerHTML = `
         <div class="boost-sel"></div>
+        ${bImgHtml}
         <div class="boost-info">
           <div class="boost-label">${d.name}</div>
           <div class="boost-protein">${d.p}г белка · ${d.w}</div>
@@ -1497,7 +1500,7 @@ function closeModal() {
 // Ссылка на фото в Google Диске должна быть с доступом "Все у кого есть ссылка"
 function getDrivePhotoUrl(photo_id) {
   if (!photo_id) return '';
-  return 'https://lh3.googleusercontent.com/d/' + photo_id + '=w400';
+  return 'https://drive.google.com/thumbnail?id=' + photo_id + '&sz=w400';
 }
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
