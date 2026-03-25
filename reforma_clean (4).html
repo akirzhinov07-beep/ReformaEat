@@ -1497,7 +1497,7 @@ function closeModal() {
 // Ссылка на фото в Google Диске должна быть с доступом "Все у кого есть ссылка"
 function getDrivePhotoUrl(photo_id) {
   if (!photo_id) return '';
-  return 'https://drive.google.com/thumbnail?id=' + photo_id + '&sz=w400';
+  return 'https://lh3.googleusercontent.com/d/' + photo_id + '=w400';
 }
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
