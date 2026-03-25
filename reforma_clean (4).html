@@ -7,6 +7,8 @@
 
 <!-- ═══ PWA ═══ -->
 <link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://drive.google.com"/>
+<link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin/>
 <meta name="theme-color" content="#f5f3ef"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -1214,7 +1216,7 @@ function buildList(type) {
     if(isBoost) {
       const bImgSrc = getDrivePhotoUrl(d.photo_id);
       if(d.photo_id) console.log('Booster photo_id:', JSON.stringify(d.photo_id), 'url:', bImgSrc);
-      const bImgHtml = bImgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${bImgSrc}" onerror="this.parentElement.style.display='none'" /></div>` : '';
+      const bImgHtml = bImgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${bImgSrc}" loading="lazy" onerror="this.parentElement.style.display='none'" /></div>` : '';
       row.innerHTML = `
         <div class="boost-sel"></div>
         ${bImgHtml}
@@ -1225,7 +1227,7 @@ function buildList(type) {
         <div class="boost-kcal">${d.kcal}</div>`;
     } else {
       const imgSrc = getDrivePhotoUrl(d.photo_id);
-      const imgHtml = imgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${imgSrc}" /></div>` : '';
+      const imgHtml = imgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${imgSrc}" loading="lazy" /></div>` : '';
       row.innerHTML = `
         <div class="dish-sel"></div>
         ${imgHtml}
@@ -1536,7 +1538,7 @@ function getDrivePhotoUrl(photo_id) {
   if (!photo_id) return '';
   const id = photo_id.trim();
   if (!id) return '';
-  return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w400';
+  return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w200';
 }
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
