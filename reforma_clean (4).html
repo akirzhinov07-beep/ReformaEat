@@ -795,7 +795,7 @@ nav{
   .calc-col{position:static;height:auto;border-top:2px solid var(--line)}
   .calc-scroll{max-height:none}
   .hero{height:auto;min-height:300px}
-  .hero-l{width:100%;padding:28px 20px;background:transparent}
+  .hero-l{width:100%;padding:28px 20px;background:transparent;display:flex;flex-direction:column;align-items:center}
   .hero-steps{justify-content:center;flex-wrap:wrap}
   .hero-tagline-block{text-align:center}
   .hero-orb3{display:none}
@@ -804,14 +804,13 @@ nav{
   .dish-row,.boost-row{padding:12px 20px}
   .meal-title-row,.booster-title-row{padding:18px 20px 12px}
   .plan-opt{padding:18px 20px}
-  .training-btn{font-size:9px;padding:5px 8px;gap:5px;border-radius:10px}
-  .training-btn-icon-wrap{width:22px;height:22px;font-size:11px}
-  .training-btn-title{font-size:10px;letter-spacing:.1px}
-  .training-btn-sub{font-size:8px}
-  .hero-step{padding:8px 10px;min-width:72px;border-radius:12px;gap:5px}
-  .hero-step-icon{font-size:18px}
-  .hero-step span{font-size:10px}
-  .hero-step-sep{font-size:13px}
+  .training-btn{display:none}
+  .training-btn-mobile{display:inline-flex !important}
+  .hero-steps{flex-wrap:nowrap;gap:6px}
+  .hero-step{padding:6px 8px;min-width:0;width:auto;border-radius:10px;gap:4px}
+  .hero-step-icon{font-size:16px}
+  .hero-step span{font-size:9px;white-space:nowrap}
+  .hero-step-sep{font-size:11px;padding:0}
 }
 </style>
 </head>
@@ -854,6 +853,13 @@ nav{
           <span>Худей с удовольствием</span>
         </div>
       </div>
+      <a class="training-btn training-btn-mobile" href="https://reformanalchik.ru" target="_blank" rel="noopener" onclick="trackTraining()" style="display:none;margin-top:12px;align-self:center">
+        <span class="training-btn-icon-wrap" style="width:22px;height:22px;font-size:11px">🏃</span>
+        <span class="training-btn-text">
+          <span class="training-btn-title" style="font-size:10px">Тренируйся с нами дома</span>
+          <span class="training-btn-sub" style="font-size:8px">Начни прямо сейчас</span>
+        </span>
+      </a>
     </div>
   </div>
   <div class="hero-r" id="heroPhoto">
