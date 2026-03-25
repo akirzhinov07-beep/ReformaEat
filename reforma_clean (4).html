@@ -1203,7 +1203,8 @@ function buildList(type) {
     row.className = (isBoost?'boost-row':'dish-row')+(on?' on':'');
     if(isBoost) {
       const bImgSrc = getDrivePhotoUrl(d.photo_id);
-      const bImgHtml = bImgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${bImgSrc}" /></div>` : '';
+      if(d.photo_id) console.log('Booster photo_id:', JSON.stringify(d.photo_id), 'url:', bImgSrc);
+      const bImgHtml = bImgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${bImgSrc}" onerror="this.parentElement.style.display='none'" /></div>` : '';
       row.innerHTML = `
         <div class="boost-sel"></div>
         ${bImgHtml}
@@ -1505,7 +1506,9 @@ function closeModal() {
 // Ссылка на фото в Google Диске должна быть с доступом "Все у кого есть ссылка"
 function getDrivePhotoUrl(photo_id) {
   if (!photo_id) return '';
-  return 'https://drive.google.com/thumbnail?id=' + photo_id + '&sz=w400';
+  const id = photo_id.trim();
+  if (!id) return '';
+  return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w400';
 }
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
