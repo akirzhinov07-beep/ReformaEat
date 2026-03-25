@@ -1493,6 +1493,24 @@ function tryOrder() {
       orders.unshift(order);
       localStorage.setItem('rf_orders',JSON.stringify(orders));
     }catch(e){}
+    /* ── TELEGRAM NOTIFICATION ── */
+    try{
+      const TG_TOKEN='8574189977:AAG5L6oiOHOWAckqsI_efrcVrWf3ib8zqbw';
+      const TG_CHAT='936026927';
+      const dishLines=Object.entries(order.dishes).map(([k,v])=>'  • '+k+': '+v).join('\n');
+      const msg='🍽 *Новый заказ reForma*\n\n'
+        +'👤 Имя: '+order.name+'\n'
+        +'📞 Телефон: '+order.phone+'\n'
+        +'📅 Дата доставки: '+(order.deliveryDate||'не указана')+'\n'
+        +'🥗 План: '+order.plan+'\n'
+        +(order.promo?'🎟 Промокод: '+order.promo+'\n':'')
+        +'\n*Блюда:*\n'+dishLines;
+      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'Markdown'})
+      }).catch(function(){});
+    }catch(e){}
   })();
 }
 function closeModal() {
