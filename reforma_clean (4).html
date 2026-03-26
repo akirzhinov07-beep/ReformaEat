@@ -1159,28 +1159,50 @@ function parseCsvMenu(csvText) {
 /* ── ЗАГРУЗКА МЕНЮ ── */
 let MENU = {breakfast:[],lunch:[],snack:[],dinner:[],booster:[]};
 
+const MENU_CACHE_KEY = 'rf_menu_cache';
+const MENU_CACHE_TTL = 60 * 60 * 1000; // 1 час
+
 async function loadMenuFromSheet() {
+  const loader = document.getElementById('menuLoading');
+  const appEl  = document.querySelector('.app');
+
+  // Попробуй загрузить из кэша
+  try {
+    const cached = JSON.parse(localStorage.getItem(MENU_CACHE_KEY) || 'null');
+    if (cached && cached.menu && (Date.now() - cached.ts) < MENU_CACHE_TTL) {
+      MENU = cached.menu;
+      if (loader) loader.style.display = 'none';
+      if (appEl)  appEl.style.display  = '';
+      // Обновить кэш в фоне
+      fetchAndCacheMenu();
+      return;
+    }
+  } catch(e) {}
+
   if (!SHEET_CSV_URL) {
     MENU = MENU_FALLBACK;
     return;
   }
-  const loader = document.getElementById('menuLoading');
-  const appEl  = document.querySelector('.app');
   if (loader) loader.style.display = 'block';
   if (appEl)  appEl.style.display  = 'none';
+  await fetchAndCacheMenu();
+  if (loader) loader.style.display = 'none';
+  if (appEl)  appEl.style.display  = '';
+}
+
+async function fetchAndCacheMenu() {
   try {
     const resp = await fetch(SHEET_CSV_URL);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const parsed = parseCsvMenu(text);
-    if (parsed) { MENU = parsed; }
-    else { throw new Error('пустой или невалидный CSV'); }
+    if (parsed) {
+      MENU = parsed;
+      localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ts: Date.now(), menu: parsed}));
+    } else { throw new Error('пустой CSV'); }
   } catch(e) {
-    console.warn('reForma: не удалось загрузить меню из таблицы, используем резервные данные.', e);
-    MENU = MENU_FALLBACK;
-  } finally {
-    if (loader) loader.style.display = 'none';
-    if (appEl)  appEl.style.display  = '';
+    console.warn('reForma: не удалось загрузить меню из таблицы.', e);
+    if (!MENU || Object.keys(MENU).length === 0) MENU = MENU_FALLBACK;
   }
 }
 /* ── DAY-OF-WEEK MENU LOGIC ── */
