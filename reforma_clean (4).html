@@ -491,6 +491,7 @@ nav{
   font-size:17px;font-weight:600;color:var(--mc);
 }
 .dish-weight{font-size:11px;color:var(--ink3);font-weight:300}
+.dish-kcal-unit{font-size:10px;font-weight:300;color:var(--ink3);margin-left:2px;font-family:'Modulus',sans-serif}
 /* ── BOOSTER ── */
 .booster-block{
   display:none;border-bottom:1px solid var(--line);
@@ -1024,7 +1025,7 @@ nav{
       <div class="kcal-display">
         <div class="kcal-display-title">Калькулятор КБЖУ</div>
         <div class="kcal-ring">
-          <svg viewBox="0 0 130 130" width="130" height="130">
+          <svg viewBox="0 0 130 130" width="100%" height="100%">
             <circle class="ring-bg" cx="65" cy="65" r="60"/>
             <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="60"/>
           </svg>
@@ -1329,7 +1330,7 @@ function buildList(type) {
           <div class="boost-label">${d.name}</div>
           <div class="boost-protein">${d.p}г белка · ${d.w}</div>
         </div>
-        <div class="boost-kcal">${d.kcal}</div>`;
+        <div class="boost-kcal">${d.kcal}<span class="dish-kcal-unit">ккал</span></div>`;
     } else {
       const imgSrc = getDrivePhotoUrl(d.photo_id);
       const imgHtml = imgSrc ? `<div class="dish-img-wrap"><img class="dish-img" src="${imgSrc}" loading="lazy" /></div>` : '';
@@ -1347,11 +1348,19 @@ function buildList(type) {
           </div>
         </div>
         <div class="dish-right">
-          <div class="dish-kcal">${d.kcal}</div>
+          <div class="dish-kcal">${d.kcal}<span class="dish-kcal-unit">ккал</span></div>
           <div class="dish-weight">${d.w}</div>
         </div>`;
     }
-    row.onclick = () => { sel[type]=on?null:d.id; buildList(type); updateCalc(); };
+    row.dataset.dishId = d.id;
+    row.onclick = () => {
+      const wasOn = sel[type] === d.id;
+      sel[type] = wasOn ? null : d.id;
+      el.querySelectorAll('[data-dish-id]').forEach(r => {
+        r.classList.toggle('on', r.dataset.dishId === sel[type]);
+      });
+      updateCalc();
+    };
     el.appendChild(row);
   });
 }
