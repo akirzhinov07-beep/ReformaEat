@@ -1087,6 +1087,10 @@ nav{
           <div class="field-label">Квартира <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
           <input class="field-input" id="fApt" type="text" placeholder="47" autocomplete="address-line2"/>
         </div>
+        <div class="field">
+          <div class="field-label">Комментарий <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
+          <textarea class="field-input" id="fComment" rows="2" placeholder="Код домофона, ориентир, пожелания к доставке..." style="resize:none;line-height:1.5"></textarea>
+        </div>
       </div>
       <div class="form-section">
         <div class="form-section-title">Контактные данные</div>
@@ -1608,8 +1612,10 @@ function tryOrder() {
     const d=new Date(selDate+'T12:00:00');
     lines+=`Доставка: <strong>${d.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'})}</strong><br>`;
   }
+  const comment=document.getElementById('fComment').value.trim();
   const promo=document.getElementById('fPromo').value.trim();
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
+  if(comment) lines+=`Комментарий: ${comment}<br>`;
   if(promo) {
     if(promoData) lines+=`Промокод: <strong>${promo}</strong> (${promoData.label})<br>`;
     else lines+=`Промокод: <strong>${promo}</strong><br>`;
@@ -1636,6 +1642,7 @@ function tryOrder() {
       name: document.getElementById('fName').value.trim(),
       phone: '+7 '+document.getElementById('fPhone').value,
       deliveryDate: selDate||'',
+      comment: document.getElementById('fComment').value.trim(),
       promo: document.getElementById('fPromo').value.trim(),
       discount: promoData ? promoData.discount : 0,
       plan: plan==='2000'?'2000 ккал':'1600 ккал',
@@ -1656,6 +1663,7 @@ function tryOrder() {
         +'📞 Телефон: '+order.phone+'\n'
         +'📅 Дата доставки: '+(order.deliveryDate||'не указана')+'\n'
         +'🥗 План: '+order.plan+'\n'
+        +(order.comment?'💬 Комментарий: '+order.comment+'\n':'')
         +(order.promo?'🎟 Промокод: '+order.promo+(order.discount?' (скидка '+order.discount+' ₽)':'')+'\n':'')
         +'\n*Блюда:*\n'+dishLines;
       fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
@@ -1672,6 +1680,7 @@ function closeModal() {
   selDate=null;
   document.getElementById('fName').value='';
   document.getElementById('fPhone').value='';
+  document.getElementById('fComment').value='';
   document.getElementById('fPromo').value='';
   ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
   renderCal();updateCalc();
