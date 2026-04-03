@@ -796,18 +796,18 @@ nav{
 /* ── RESPONSIVE ── */
 @media(max-width:960px){
   .app{grid-template-columns:1fr}
-  .calc-col{position:static;height:auto;border-top:2px solid var(--line)}
-  .calc-scroll{max-height:none}
-  .hero{height:auto;min-height:300px}
-  .hero-l{width:100%;padding:28px 20px;background:transparent;display:flex;flex-direction:column;align-items:center}
-  .hero-steps{justify-content:center;flex-wrap:wrap}
+  .calc-col{position:static;height:auto;border-top:2px solid var(--line);border-left:none}
+  .calc-scroll{max-height:none;padding:20px 16px 0}
+  .hero{height:auto;min-height:260px}
+  .hero-l{width:100%;padding:24px 16px 20px;background:transparent;display:flex;flex-direction:column;align-items:center}
   .hero-tagline-block{text-align:center}
   .hero-orb3{display:none}
-  nav{padding:0 20px}
+  nav{padding:0 16px}
   .plan-toggle{display:none}
-  .dish-row,.boost-row{padding:12px 20px}
-  .meal-title-row,.booster-title-row{padding:18px 20px 12px}
-  .plan-opt{padding:18px 20px}
+  .dish-row,.boost-row{padding:10px 16px}
+  .meal-title-row,.booster-title-row{padding:14px 16px 10px}
+  .plan-opt{padding:14px 16px}
+  .plan-opt-kcal{font-size:26px}
   .training-btn{display:none}
   .training-btn-mobile{display:inline-flex !important}
   .hero-steps{flex-wrap:nowrap;gap:6px}
@@ -815,6 +815,15 @@ nav{
   .hero-step-icon{font-size:16px}
   .hero-step span{font-size:9px;white-space:nowrap}
   .hero-step-sep{font-size:11px;padding:0}
+  .dish-img-wrap{width:60px;height:60px;min-width:60px}
+  .dish-img{width:60px;height:60px}
+  .dish-name{font-size:13px}
+  .boost-label{font-size:13px}
+  .macros-row{gap:5px}
+  .macro-box{padding:8px 6px}
+  .mb-val{font-size:16px}
+  .kcal-ring{width:110px;height:110px}
+  .kcal-num{font-size:26px}
 }
 /* ── PWA INSTALL BANNER ── */
 #pwa-banner{
@@ -840,14 +849,41 @@ nav{
 }
 /* ── MOBILE FORM IMPROVEMENTS ── */
 @media(max-width:600px){
-  .calc-col .form-section{padding:0 0 16px}
-  .field-input{font-size:16px !important}
-  .calc-scroll{padding:16px}
-  .field{margin-bottom:12px}
-  .form-section-title{font-size:13px;margin-bottom:12px}
-  .cal-section{padding-top:8px}
-  .modal-box{margin:12px;max-height:90vh;overflow-y:auto}
-  .modal-summary{font-size:14px}
+  .calc-scroll{padding:16px 12px 0}
+  .field-input{font-size:16px !important;padding:11px 12px}
+  .field{margin-bottom:10px}
+  .field-label{font-size:12px}
+  .form-section-title{font-size:11px;margin-bottom:10px}
+  .form-section{padding:14px 0 6px}
+  .cal-section{padding:14px 0 6px}
+  .cal-title{font-size:11px;margin-bottom:10px}
+  .cal-day{font-size:13px;height:36px}
+  .cal-grid{gap:3px}
+  .modal-box{margin:8px;border-radius:16px;max-height:92vh;overflow-y:auto}
+  .modal-summary{font-size:13px;line-height:1.7}
+  .modal-title{font-size:16px}
+  .modal-ok{padding:13px;font-size:14px}
+  .plan-row{grid-template-columns:1fr 1fr}
+  .plan-opt{padding:12px}
+  .plan-opt-kcal{font-size:22px}
+  .plan-opt-name{font-size:13px}
+  .plan-opt-sub{font-size:11px}
+  .ol-cat{font-size:9px}
+  .ol-val{font-size:11px}
+  .kcal-display{padding:14px 0 12px}
+  .kcal-ring{width:100px;height:100px}
+  .kcal-num{font-size:24px}
+  .macros-row{margin-bottom:14px}
+  .order-btn{padding:14px;font-size:14px}
+  .hero-tagline-main{font-size:clamp(28px,8vw,42px)}
+  nav{height:52px}
+  .nav-logo img{height:20px}
+  .dish-img-wrap{width:56px;height:56px;min-width:56px}
+  .dish-img{width:56px;height:56px;border-radius:10px}
+  .meal-title-row,.booster-title-row{padding:12px 12px 8px}
+  .dish-row,.boost-row{padding:8px 12px}
+  .delivery-info-msg{font-size:12px;padding:8px 12px}
+  .cal-notice{font-size:12px;padding:8px 12px}
 }
 </style>
 </head>
