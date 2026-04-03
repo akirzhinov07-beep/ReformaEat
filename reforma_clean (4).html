@@ -832,6 +832,23 @@ nav{
 .pwa-install{background:#ce5b40;color:#fff;border:none;border-radius:8px;
   padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .pwa-close{background:none;border:none;font-size:18px;color:#bbb;cursor:pointer;padding:4px;flex-shrink:0}
+/* ── DELIVERY INFO MSG ── */
+.delivery-info-msg{
+  background:#fff8e7;border:1px solid #f0d080;border-radius:10px;
+  padding:10px 14px;font-size:13px;color:#7a6000;margin-bottom:14px;
+  line-height:1.4;
+}
+/* ── MOBILE FORM IMPROVEMENTS ── */
+@media(max-width:600px){
+  .calc-col .form-section{padding:0 0 16px}
+  .field-input{font-size:16px !important}
+  .calc-scroll{padding:16px}
+  .field{margin-bottom:12px}
+  .form-section-title{font-size:13px;margin-bottom:12px}
+  .cal-section{padding-top:8px}
+  .modal-box{margin:12px;max-height:90vh;overflow-y:auto}
+  .modal-summary{font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -1013,11 +1030,11 @@ nav{
         <div class="form-section-title">Адрес доставки</div>
         <div class="field">
           <div class="field-label">Город <span class="req">*</span></div>
-          <input class="field-input" id="fCity" type="text" placeholder="Москва" autocomplete="address-level2" oninput="updateOrderBtn()"/>
+          <input class="field-input" id="fCity" type="text" placeholder="Нальчик" autocomplete="address-level2" oninput="filterRu(this);updateOrderBtn()"/>
         </div>
         <div class="field">
           <div class="field-label">Улица <span class="req">*</span></div>
-          <input class="field-input" id="fStreet" type="text" placeholder="ул. Пушкина" autocomplete="street-address" oninput="updateOrderBtn()"/>
+          <input class="field-input" id="fStreet" type="text" placeholder="ул. Кулиева" autocomplete="street-address" oninput="filterRu(this);updateOrderBtn()"/>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field" style="margin-bottom:0">
@@ -1052,11 +1069,13 @@ nav{
         </div>
         <div class="field">
           <div class="field-label">Промокод <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
-          <input class="field-input" id="fPromo" type="text" placeholder="REFORMA2026" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+          <input class="field-input" id="fPromo" type="text" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();checkPromo()"/>
+          <div id="promoHint" style="font-size:12px;margin-top:5px;min-height:16px"></div>
         </div>
       </div>
       <div class="cal-section">
         <div class="cal-title">Дата доставки</div>
+        <div class="delivery-info-msg">🚚 Доставка осуществляется исполнителем, за счёт заказчика</div>
         <div class="cal-notice">
           Заказ на <span>завтра</span> принимается до <span>12:00 по Москве</span>.<br>
           Сегодня в Москве: <span id="mskTime">--:--</span>
@@ -1503,6 +1522,32 @@ function pickDate(ds, el) {
   if(selDate) el.classList.add('selected');
   updateOrderBtn();
 }
+/* ── PROMO CODES ── */
+const PROMO_CODES = {
+  'REFORMA2026': {discount: 1490, label: 'скидка 1 490 ₽'},
+  'REFORMA2025': {discount: 200,  label: 'скидка 200 ₽'},
+};
+
+function checkPromo() {
+  const val = document.getElementById('fPromo').value.trim().toUpperCase();
+  const hint = document.getElementById('promoHint');
+  if (!val) { hint.textContent=''; hint.style.color=''; return null; }
+  if (PROMO_CODES[val]) {
+    hint.textContent = '✓ Промокод принят: ' + PROMO_CODES[val].label;
+    hint.style.color = '#2e7d32';
+    return PROMO_CODES[val];
+  } else {
+    hint.textContent = '✗ Промокод не найден';
+    hint.style.color = '#ce5b40';
+    return null;
+  }
+}
+
+/* ── RUSSIAN ONLY INPUT ── */
+function filterRu(input) {
+  input.value = input.value.replace(/[^а-яёА-ЯЁ\s\-\.\,0-9]/g, '');
+}
+
 /* ── ORDER ── */
 function tryOrder() {
   const name=document.getElementById('fName').value.trim();
@@ -1519,7 +1564,11 @@ function tryOrder() {
     lines+=`Доставка: <strong>${d.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'})}</strong><br>`;
   }
   const promo=document.getElementById('fPromo').value.trim();
-  if(promo) lines+=`Промокод: <strong>${promo}</strong><br>`;
+  const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
+  if(promo) {
+    if(promoData) lines+=`Промокод: <strong>${promo}</strong> (${promoData.label})<br>`;
+    else lines+=`Промокод: <strong>${promo}</strong><br>`;
+  }
   lines+='<br>';
   types.forEach(t=>{
     const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
@@ -1543,6 +1592,7 @@ function tryOrder() {
       phone: '+7 '+document.getElementById('fPhone').value,
       deliveryDate: selDate||'',
       promo: document.getElementById('fPromo').value.trim(),
+      discount: promoData ? promoData.discount : 0,
       plan: plan==='2000'?'2000 ккал':'1600 ккал',
       dishes: dishes
     };
@@ -1561,7 +1611,7 @@ function tryOrder() {
         +'📞 Телефон: '+order.phone+'\n'
         +'📅 Дата доставки: '+(order.deliveryDate||'не указана')+'\n'
         +'🥗 План: '+order.plan+'\n'
-        +(order.promo?'🎟 Промокод: '+order.promo+'\n':'')
+        +(order.promo?'🎟 Промокод: '+order.promo+(order.discount?' (скидка '+order.discount+' ₽)':'')+'\n':'')
         +'\n*Блюда:*\n'+dishLines;
       fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
         method:'POST',
