@@ -1163,7 +1163,7 @@ nav{
    ──────────────────────────────────────────────────
    category: breakfast / lunch / dinner / snack / booster
    photo_id: ID файла из Google Диска (часть ссылки /file/d/ВОТ_ЭТОТ_ID/view)
-   day: День 1 / День 2 / День 3 / День 4 (для бустеров можно оставить пустым)
+   day: День 1 / День 2 / День 3 / День 4 / День 5 (для перекусов и бустеров — оставить пустым)
    ══════════════════════════════════════════════════ */
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScjTC7Fw3u8XRhopV6bRKZRV5Tqn8DpoFuPdvXLzYm-158WvLOHJF4gybtPSoCC2zhkXuTaCYmXuy8/pub?gid=0&single=true&output=csv';
 
@@ -1298,11 +1298,11 @@ async function fetchAndCacheMenu() {
 const menuByDay = {
   1: ['День 1', 'День 2'], // Понедельник
   2: ['День 3', 'День 4'], // Вторник
-  3: ['День 1', 'День 3'], // Среда
-  4: ['День 2', 'День 4'], // Четверг
-  5: ['День 1', 'День 4'], // Пятница
-  6: ['День 2', 'День 3'], // Суббота
-  0: ['День 1', 'День 3'], // Воскресенье
+  3: ['День 5', 'День 1'], // Среда
+  4: ['День 2', 'День 3'], // Четверг
+  5: ['День 4', 'День 5'], // Пятница
+  6: ['День 1', 'День 4'], // Суббота
+  0: ['День 5', 'День 2'], // Воскресенье
 };
 const todayDOW = new Date().getDay();
 const todayMenus = menuByDay[todayDOW];
@@ -1316,7 +1316,7 @@ function buildList(type) {
   el.innerHTML = '';
   const isBoost = type==='booster';
   // For regular meals: show only dishes matching today's 2 menus
-  const dishes = isBoost
+  const dishes = (isBoost || type === 'snack')
     ? (MENU[type]||[])
     : (MENU[type]||[]).filter(d => todayMenus.includes(d.day));
   dishes.forEach(d => {
