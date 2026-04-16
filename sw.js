@@ -1,4 +1,4 @@
-const CACHE = 'reforma-v1';
+const CACHE = 'reforma-v2';
 const STATIC = [
   './reforma_clean%20(4).html',
   './manifest.json',
