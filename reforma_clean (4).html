@@ -1246,7 +1246,7 @@ function parseCsvMenu(csvText) {
 /* ── ЗАГРУЗКА МЕНЮ ── */
 let MENU = {breakfast:[],lunch:[],snack:[],dinner:[],booster:[]};
 
-const MENU_CACHE_KEY = 'rf_menu_cache';
+const MENU_CACHE_KEY = 'rf_menu_cache_v2';
 const MENU_CACHE_TTL = 60 * 60 * 1000; // 1 час
 
 async function loadMenuFromSheet() {
