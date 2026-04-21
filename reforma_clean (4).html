@@ -886,6 +886,20 @@ nav{
   .delivery-info-msg{font-size:12px;padding:8px 12px}
   .cal-notice{font-size:12px;padding:8px 12px}
 }
+/* ── PLAN PRICE ── */
+.plan-opt-price{
+  font-family:'Awesome',serif;
+  font-size:16px;font-weight:700;
+  color:var(--coral);margin-top:6px;
+}
+/* ── LEGAL CHECKBOXES ── */
+.legal-checks{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding-top:4px}
+.legal-check{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--ink2);line-height:1.4}
+.legal-check input[type=checkbox]{
+  width:16px;height:16px;min-width:16px;margin-top:1px;
+  accent-color:var(--coral);cursor:pointer;
+}
+.legal-check a{color:var(--coral);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -962,6 +976,7 @@ nav{
         <div>
           <div class="plan-opt-name">Базовый рацион</div>
           <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус</div>
+          <div class="plan-opt-price">1 490 ₽</div>
         </div>
         <div>
           <div class="plan-opt-kcal" style="font-size:28px"><span style="font-size:16px;font-weight:400">До </span>1500</div>
@@ -972,6 +987,7 @@ nav{
         <div>
           <div class="plan-opt-name">С белковым бустером</div>
           <div class="plan-opt-sub">Базовый + протеиновый перекус</div>
+          <div class="plan-opt-price">1 620 ₽</div>
         </div>
         <div>
           <div class="plan-opt-kcal" style="font-size:28px">1500+</div>
@@ -1132,6 +1148,16 @@ nav{
       </div>
     </div>
     <div class="calc-bottom">
+      <div class="legal-checks">
+        <label class="legal-check">
+          <input type="checkbox" id="chkOferta" onchange="updateOrderBtn()">
+          <span>Принимаю <a href="oferta.html" target="_blank">публичную оферту</a></span>
+        </label>
+        <label class="legal-check">
+          <input type="checkbox" id="chkPd" onchange="updateOrderBtn()">
+          <span>Согласен на <a href="pd-policy.html" target="_blank">обработку персональных данных</a></span>
+        </label>
+      </div>
       <button class="order-btn" id="orderBtn" disabled onclick="tryOrder()">
         Оформить заказ
       </button>
@@ -1411,7 +1437,9 @@ function updateOrderBtn() {
   const city=document.getElementById('fCity').value.trim();
   const street=document.getElementById('fStreet').value.trim();
   const house=document.getElementById('fHouse').value.trim();
-  const ok=allDish&&selDate&&name&&phone.length>=10&&city&&street&&house;
+  const chkOferta = document.getElementById('chkOferta')?.checked;
+  const chkPd = document.getElementById('chkPd')?.checked;
+  const ok=allDish&&selDate&&name&&phone.length>=10&&city&&street&&house&&chkOferta&&chkPd;
   document.getElementById('orderBtn').disabled=!ok;
   updateHint(allDish, done, rem);
 }
