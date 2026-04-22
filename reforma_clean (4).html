@@ -839,7 +839,7 @@ nav{
 /* ── RESPONSIVE ── */
 @media(max-width:960px){
   .app{grid-template-columns:1fr}
-  .calc-col{position:static;height:auto;border-top:2px solid var(--line);border-left:none}
+  .calc-col{position:static;height:auto;overflow:visible;border-top:2px solid var(--line);border-left:none}
   .calc-scroll{max-height:none;padding:20px 16px 0}
   .hero{height:auto;min-height:260px}
   .hero-l{width:100%;padding:24px 16px 20px;background:transparent;display:flex;flex-direction:column;align-items:center}
@@ -1377,7 +1377,7 @@ nav{
     <span id="week-progress-hint">Выбери блюда на каждый день</span>
   </div>
   <div class="week-form">
-    <div class="calc-col" style="max-width:100%">
+    <div class="calc-col" style="max-width:100%;overflow:visible;height:auto;position:static;border-left:none;">
       <div class="form-section">
         <div class="form-section-title">Адрес доставки</div>
         <div class="field">
