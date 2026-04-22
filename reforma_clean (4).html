@@ -453,11 +453,26 @@ nav{
   display:flex;align-items:center;
   padding:13px 36px;cursor:pointer;
   border-top:1px solid var(--line);
-  transition:background .15s;
+  transition:background .15s, border-left .15s;
   gap:16px;
+  position:relative;
+  border-left:3px solid transparent;
 }
 .dish-row:hover{background:var(--mbg)}
-.dish-row.on{background:var(--msel)}
+.dish-row.on{
+  background:var(--msel);
+  border-left:3px solid var(--mc);
+}
+.dish-row.on::after{
+  content:'выбрано';
+  position:absolute;
+  top:8px;right:10px;
+  font-size:10px;font-weight:600;letter-spacing:.3px;
+  color:var(--mc);
+  background:rgba(206,91,64,.12);
+  padding:2px 7px;
+  border-radius:20px;
+}
 .dish-sel{
   width:20px;height:20px;min-width:20px;
   border-radius:50%;
