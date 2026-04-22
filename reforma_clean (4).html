@@ -980,25 +980,60 @@ nav{
 .week-total-wrap{text-align:right}
 .week-total-label{font-size:11px;color:var(--ink3)}
 .week-total-price{font-family:'Awesome',serif;font-size:26px;font-weight:700;color:var(--coral)}
+/* ── HERO SUBTITLE ── */
+.hero-subtitle{
+  font-size:14px;color:var(--ink3);margin-top:8px;
+  min-height:20px;transition:opacity .3s;
+  text-align:center;
+}
+/* ── APP BACK BAR ── */
+.app-back-bar{
+  padding:12px 24px 0;
+}
+.app-back-bar button{
+  background:none;border:none;cursor:pointer;
+  color:var(--ink3);font-size:13px;padding:6px 10px;
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:8px;transition:all .15s;
+}
+.app-back-bar button:hover{background:var(--bg);color:var(--coral)}
+@media(max-width:600px){.app-back-bar{padding:10px 12px 0}}
+/* ── 7-DAY CARDS ── */
 .week-days-wrap{margin:0 24px 0}
-.week-days-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
-.week-days-table{width:100%;min-width:640px;border-collapse:collapse}
-.week-days-table th{
-  font-size:10px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.8px;color:var(--ink3);padding:8px 10px;
+.week-days-cards{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.week-day-card{border-bottom:1px solid var(--line)}
+.week-day-card:last-child{border-bottom:none}
+.week-day-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px;background:var(--bg);
   border-bottom:1px solid var(--line);
-  background:var(--bg);text-align:center;
 }
-.week-days-table th:first-child{text-align:left;min-width:100px}
-.week-days-table td{
-  padding:6px 8px;vertical-align:top;
-  border-bottom:1px solid var(--line);
-  border-left:1px solid var(--line);
+.week-day-name{font-weight:700;font-size:12px;color:var(--ink)}
+.week-day-date{font-size:11px;color:var(--ink3)}
+.week-day-done{
+  margin-left:auto;font-size:10px;font-weight:600;
+  color:var(--ink3);
 }
-.week-days-table td:first-child{border-left:none;background:var(--bg);white-space:nowrap}
-.week-days-table tr:last-child td{border-bottom:none}
-.week-day-name{font-weight:700;font-size:12px;color:var(--ink);padding:2px 0}
-.week-day-date{font-size:10px;color:var(--ink3)}
+.week-day-done.complete{color:var(--green,#4e8c3a)}
+.week-meal-grid{
+  display:flex;
+}
+.week-meal-col{
+  flex:1;padding:8px;border-left:1px solid var(--line);
+  min-width:0;
+}
+.week-meal-col:first-child{border-left:none}
+.week-meal-col[data-meal="breakfast"]{--w7-c:#4a87b5;--w7-sel:#daeaf5;--w7-bg:#eef5fb}
+.week-meal-col[data-meal="lunch"]   {--w7-c:#4e8c3a;--w7-sel:#ddf0e4;--w7-bg:#edf6ef}
+.week-meal-col[data-meal="dinner"]  {--w7-c:#7b5ea7;--w7-sel:#ede6f6;--w7-bg:#f3eefb}
+.week-meal-col[data-meal="snack"]   {--w7-c:#b0602a;--w7-sel:#f5e6da;--w7-bg:#faf0e8}
+.week-meal-col[data-meal="booster"] {--w7-c:#ce5b40;--w7-sel:#fbe9e5;--w7-bg:#fdf2ef}
+.week-meal-label{
+  font-size:9px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--ink3);
+  margin-bottom:5px;padding-bottom:4px;
+  border-bottom:1px solid var(--line);text-align:center;
+}
 .w7-dish{
   padding:5px 7px;border-radius:8px;
   border:1.5px solid var(--line);margin-bottom:4px;
@@ -1010,11 +1045,22 @@ nav{
 .w7-dish.on{background:var(--w7-sel,#e8f0fe);border-color:var(--w7-c,#4a87b5)}
 .w7-dish-name{font-size:10px;line-height:1.35;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .w7-dish-kcal{font-size:9px;color:var(--ink3);font-weight:600;margin-top:2px}
-.week-days-table td[data-meal="breakfast"]{--w7-c:#4a87b5;--w7-sel:#daeaf5;--w7-bg:#eef5fb}
-.week-days-table td[data-meal="lunch"]   {--w7-c:#4e8c3a;--w7-sel:#ddf0e4;--w7-bg:#edf6ef}
-.week-days-table td[data-meal="dinner"]  {--w7-c:#7b5ea7;--w7-sel:#ede6f6;--w7-bg:#f3eefb}
-.week-days-table td[data-meal="snack"]   {--w7-c:#b0602a;--w7-sel:#f5e6da;--w7-bg:#faf0e8}
-.week-days-table td[data-meal="booster"] {--w7-c:#ce5b40;--w7-sel:#fbe9e5;--w7-bg:#fdf2ef}
+/* Mobile: 2×N grid of meal columns per day */
+@media(max-width:640px){
+  .week-meal-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .week-meal-col{
+    border-left:none;
+    border-top:1px solid var(--line);
+  }
+  .week-meal-col:nth-child(2n){border-left:1px solid var(--line)}
+  .week-meal-col:nth-child(1),.week-meal-col:nth-child(2){border-top:none}
+  .w7-dish-name{-webkit-line-clamp:2;font-size:11px}
+  .w7-dish-kcal{font-size:10px}
+  .week-days-wrap{margin:0 12px}
+}
 .week-progress{
   margin:10px 24px 0;padding:10px 16px;
   background:var(--bg);border-radius:10px;
@@ -1023,14 +1069,7 @@ nav{
 }
 .week-progress-count{font-weight:700}
 .week-form{padding:0 24px}
-.week-back-top{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:12px;color:var(--ink3);cursor:pointer;
-  background:none;border:none;padding:8px 0 16px;
-}
-.week-back-top:hover{color:var(--coral)}
 @media(max-width:600px){
-  .week-days-wrap{margin:0 12px 0}
   .week-header{padding:16px 12px 8px}
   .week-form{padding:0 12px}
   .week-progress{margin:8px 12px 0}
@@ -1063,6 +1102,7 @@ nav{
   <div class="hero-l">
     <div class="hero-tagline-block">
       <h1 class="hero-tagline-main">Калории?<br><em>Уже посчитали.</em></h1>
+      <p class="hero-subtitle" id="heroSubtitle"></p>
     </div>
   </div>
   <div class="hero-r" id="heroPhoto">
@@ -1097,6 +1137,7 @@ nav{
 </div>
 
 <div class="app" id="app1day" style="display:none">
+  <div class="app-back-bar"><button onclick="backToMode()">← К выбору режима</button></div>
   <div class="menu-col">
     <div class="plan-row">
       <button class="plan-opt on" id="popt1600" onclick="selectPlan('1600')">
@@ -1327,12 +1368,7 @@ nav{
     </button>
   </div>
   <div class="week-days-wrap">
-    <div class="week-days-scroll">
-      <table class="week-days-table">
-        <thead><tr id="week-thead"></tr></thead>
-        <tbody id="week-tbody"></tbody>
-      </table>
-    </div>
+    <div class="week-days-cards" id="week-days-cards"></div>
   </div>
   <div class="week-progress" id="week-progress">
     <span>Выбрано блюд: <span class="week-progress-count" id="week-sel-count">0</span> из <span id="week-total-count">28</span></span>
@@ -1989,12 +2025,18 @@ function getDrivePhotoUrl(photo_id) {
 /* ══════════════════════════════════════════════════
    MODE SELECTION
    ══════════════════════════════════════════════════ */
+function setHeroSubtitle(text) {
+  const el = document.getElementById('heroSubtitle');
+  if (el) el.textContent = text;
+}
 function selectMode(mode) {
   document.getElementById('modeSelector').style.display = 'none';
   if (mode === '1day') {
     document.getElementById('app1day').style.display = '';
+    setHeroSubtitle('Собери себе рацион на день');
   } else {
     document.getElementById('app7day').style.display = '';
+    setHeroSubtitle('Собери ниже рацион на каждый день недели');
     build7DayUI();
   }
 }
@@ -2002,6 +2044,7 @@ function backToMode() {
   document.getElementById('app1day').style.display = 'none';
   document.getElementById('app7day').style.display = 'none';
   document.getElementById('modeSelector').style.display = '';
+  setHeroSubtitle('');
 }
 
 /* ══════════════════════════════════════════════════
@@ -2042,32 +2085,44 @@ function build7DayUI() {
     : ['breakfast','lunch','dinner','snack'];
   const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',snack:'Перекус',booster:'Бустер'};
 
-  // Update total count
   const total = 7 * mealTypes.length;
   const tcEl = document.getElementById('week-total-count');
   if (tcEl) tcEl.textContent = total;
 
-  // Build table header
-  const thead = document.getElementById('week-thead');
-  thead.innerHTML = '<th></th>' + mealTypes.map(m => `<th>${mealLabels[m]}</th>`).join('');
-
-  // Build table body
-  const tbody = document.getElementById('week-tbody');
-  tbody.innerHTML = '';
+  const container = document.getElementById('week-days-cards');
+  container.innerHTML = '';
 
   dates.forEach((date, idx) => {
     const dow = date.getDay();
     const menus = menuByDay[dow];
-    const tr = document.createElement('tr');
+    const selDay = sel7[idx];
+    const doneCnt = mealTypes.filter(t => selDay[t]).length;
+    const complete = doneCnt === mealTypes.length;
 
-    // Day label cell
-    const tdLabel = document.createElement('td');
-    tdLabel.innerHTML = `<div class="week-day-name">${DAYS_RU[dow]}</div><div class="week-day-date">${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}</div>`;
-    tr.appendChild(tdLabel);
+    const card = document.createElement('div');
+    card.className = 'week-day-card';
+    card.dataset.dayIdx = idx;
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'week-day-hdr';
+    hdr.innerHTML = `<div class="week-day-name">${DAYS_RU[dow]}</div><div class="week-day-date">${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}</div>`
+      + `<div class="week-day-done${complete?' complete':''}">${doneCnt}/${mealTypes.length}</div>`;
+    card.appendChild(hdr);
+
+    // Meal grid
+    const grid = document.createElement('div');
+    grid.className = 'week-meal-grid';
 
     mealTypes.forEach(mealType => {
-      const td = document.createElement('td');
-      td.dataset.meal = mealType;
+      const col = document.createElement('div');
+      col.className = 'week-meal-col';
+      col.dataset.meal = mealType;
+
+      const lbl = document.createElement('div');
+      lbl.className = 'week-meal-label';
+      lbl.textContent = mealLabels[mealType];
+      col.appendChild(lbl);
 
       let dishes;
       if (mealType === 'booster' || mealType === 'snack') {
@@ -2078,17 +2133,18 @@ function build7DayUI() {
 
       dishes.forEach(d => {
         const tile = document.createElement('div');
-        tile.className = 'w7-dish' + (sel7[idx][mealType] === d.id ? ' on' : '');
+        tile.className = 'w7-dish' + (selDay[mealType] === d.id ? ' on' : '');
         tile.dataset.id = d.id;
         tile.innerHTML = `<div class="w7-dish-name">${d.name}</div><div class="w7-dish-kcal">${d.kcal} ккал · ${d.w}</div>`;
-        tile.onclick = () => pick7(idx, mealType, d.id, td);
-        td.appendChild(tile);
+        tile.onclick = () => pick7(idx, mealType, d.id, col);
+        col.appendChild(tile);
       });
 
-      tr.appendChild(td);
+      grid.appendChild(col);
     });
 
-    tbody.appendChild(tr);
+    card.appendChild(grid);
+    container.appendChild(card);
   });
 
   update7Progress();
@@ -2100,6 +2156,17 @@ function pick7(dayIdx, mealType, dishId, colEl) {
   colEl.querySelectorAll('.w7-dish').forEach(tile => {
     tile.classList.toggle('on', tile.dataset.id === sel7[dayIdx][mealType]);
   });
+  // Update day done counter
+  const mealTypes = plan7 === '2000'
+    ? ['breakfast','lunch','dinner','snack','booster']
+    : ['breakfast','lunch','dinner','snack'];
+  const doneCnt = mealTypes.filter(t => sel7[dayIdx][t]).length;
+  const complete = doneCnt === mealTypes.length;
+  const card = document.querySelector(`.week-day-card[data-day-idx="${dayIdx}"]`);
+  if (card) {
+    const doneEl = card.querySelector('.week-day-done');
+    if (doneEl) { doneEl.textContent = `${doneCnt}/${mealTypes.length}`; doneEl.className = 'week-day-done' + (complete?' complete':''); }
+  }
   update7Progress();
   updateOrderBtn7();
 }
