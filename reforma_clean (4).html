@@ -942,6 +942,99 @@ nav{
   accent-color:var(--coral);cursor:pointer;
 }
 .legal-check a{color:var(--coral);text-decoration:underline}
+/* ── MODE SELECTOR ── */
+.mode-selector{max-width:900px;margin:0 auto;padding:40px 24px 32px}
+.mode-title{font-size:21px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:6px}
+.mode-subtitle{font-size:14px;color:var(--ink3);text-align:center;margin-bottom:24px}
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mode-card{
+  border:2px solid var(--line);border-radius:20px;
+  background:var(--white);padding:28px 20px;cursor:pointer;
+  text-align:left;transition:all .2s;
+  display:flex;flex-direction:column;gap:8px;
+}
+.mode-card:hover{border-color:var(--blue);background:var(--blue-bg);transform:translateY(-3px);box-shadow:0 8px 24px rgba(66,133,244,.15)}
+.mode-card.week:hover{border-color:var(--coral);background:var(--coral-bg);box-shadow:0 8px 24px rgba(206,91,64,.15)}
+.mode-card-icon{font-size:30px;line-height:1;margin-bottom:4px}
+.mode-card-title{font-family:'Modulus',sans-serif;font-weight:700;font-size:17px;color:var(--ink)}
+.mode-card-sub{font-size:12px;color:var(--ink3);line-height:1.5}
+.mode-card-price{font-family:'Awesome',serif;font-size:22px;font-weight:700;color:var(--coral);margin-top:6px}
+.mode-card-price-sub{font-size:11px;color:var(--ink3);font-weight:300;margin-top:-4px}
+@media(max-width:500px){
+  .mode-cards{grid-template-columns:1fr}
+  .mode-card{padding:20px 16px}
+}
+/* ── 7-DAY APP ── */
+.week-app{max-width:900px;margin:0 auto;padding:0 0 32px}
+.week-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px 12px;
+}
+.week-back-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--ink3);font-size:13px;padding:6px 10px;
+  display:flex;align-items:center;gap:4px;
+  border-radius:8px;transition:all .15s;
+}
+.week-back-btn:hover{background:var(--bg);color:var(--coral)}
+.week-total-wrap{text-align:right}
+.week-total-label{font-size:11px;color:var(--ink3)}
+.week-total-price{font-family:'Awesome',serif;font-size:26px;font-weight:700;color:var(--coral)}
+.week-days-wrap{margin:0 24px 0}
+.week-days-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+.week-days-table{width:100%;min-width:640px;border-collapse:collapse}
+.week-days-table th{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--ink3);padding:8px 10px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg);text-align:center;
+}
+.week-days-table th:first-child{text-align:left;min-width:100px}
+.week-days-table td{
+  padding:6px 8px;vertical-align:top;
+  border-bottom:1px solid var(--line);
+  border-left:1px solid var(--line);
+}
+.week-days-table td:first-child{border-left:none;background:var(--bg);white-space:nowrap}
+.week-days-table tr:last-child td{border-bottom:none}
+.week-day-name{font-weight:700;font-size:12px;color:var(--ink);padding:2px 0}
+.week-day-date{font-size:10px;color:var(--ink3)}
+.w7-dish{
+  padding:5px 7px;border-radius:8px;
+  border:1.5px solid var(--line);margin-bottom:4px;
+  background:var(--white);cursor:pointer;
+  transition:all .15s;display:block;
+}
+.w7-dish:last-child{margin-bottom:0}
+.w7-dish:hover{background:var(--w7-bg,#f5f5f5);border-color:var(--w7-c,#aaa)}
+.w7-dish.on{background:var(--w7-sel,#e8f0fe);border-color:var(--w7-c,#4a87b5)}
+.w7-dish-name{font-size:10px;line-height:1.35;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.w7-dish-kcal{font-size:9px;color:var(--ink3);font-weight:600;margin-top:2px}
+.week-days-table td[data-meal="breakfast"]{--w7-c:#4a87b5;--w7-sel:#daeaf5;--w7-bg:#eef5fb}
+.week-days-table td[data-meal="lunch"]   {--w7-c:#4e8c3a;--w7-sel:#ddf0e4;--w7-bg:#edf6ef}
+.week-days-table td[data-meal="dinner"]  {--w7-c:#7b5ea7;--w7-sel:#ede6f6;--w7-bg:#f3eefb}
+.week-days-table td[data-meal="snack"]   {--w7-c:#b0602a;--w7-sel:#f5e6da;--w7-bg:#faf0e8}
+.week-days-table td[data-meal="booster"] {--w7-c:#ce5b40;--w7-sel:#fbe9e5;--w7-bg:#fdf2ef}
+.week-progress{
+  margin:10px 24px 0;padding:10px 16px;
+  background:var(--bg);border-radius:10px;
+  font-size:12px;color:var(--ink3);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.week-progress-count{font-weight:700}
+.week-form{padding:0 24px}
+.week-back-top{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;color:var(--ink3);cursor:pointer;
+  background:none;border:none;padding:8px 0 16px;
+}
+.week-back-top:hover{color:var(--coral)}
+@media(max-width:600px){
+  .week-days-wrap{margin:0 12px 0}
+  .week-header{padding:16px 12px 8px}
+  .week-form{padding:0 12px}
+  .week-progress{margin:8px 12px 0}
+}
 </style>
 </head>
 <body>
@@ -981,7 +1074,29 @@ nav{
   Загружаем меню...
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-<div class="app">
+
+<!-- MODE SELECTOR -->
+<div class="mode-selector" id="modeSelector" style="display:none">
+  <div class="mode-title">Как хотите питаться?</div>
+  <div class="mode-subtitle">Выберите тип рациона</div>
+  <div class="mode-cards">
+    <button class="mode-card" onclick="selectMode('1day')">
+      <div class="mode-card-icon">🍽</div>
+      <div class="mode-card-title">На 1 день</div>
+      <div class="mode-card-sub">Выбери блюда на один день и укажи дату доставки</div>
+      <div class="mode-card-price">от 1 490 ₽</div>
+    </button>
+    <button class="mode-card week" onclick="selectMode('7day')">
+      <div class="mode-card-icon">📅</div>
+      <div class="mode-card-title">На 7 дней</div>
+      <div class="mode-card-sub">Скомплектуй рацион на всю неделю — блюда на каждый день</div>
+      <div class="mode-card-price">от 10 430 ₽</div>
+      <div class="mode-card-price-sub">1 490 ₽ × 7 дней</div>
+    </button>
+  </div>
+</div>
+
+<div class="app" id="app1day" style="display:none">
   <div class="menu-col">
     <div class="plan-row">
       <button class="plan-opt on" id="popt1600" onclick="selectPlan('1600')">
@@ -1177,6 +1292,123 @@ nav{
     </div>
   </div>
 </div>
+
+<!-- 7-DAY APP -->
+<div class="week-app" id="app7day" style="display:none">
+  <div class="week-header">
+    <button class="week-back-btn" onclick="backToMode()">← Назад</button>
+    <div class="week-total-wrap">
+      <div class="week-total-label">Итого за 7 дней</div>
+      <div class="week-total-price" id="week-total-price">10 430 ₽</div>
+    </div>
+  </div>
+  <div class="plan-row" style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:16px">
+    <button class="plan-opt on" id="wpopt1600" onclick="selectPlan7('1600')">
+      <div>
+        <div class="plan-opt-name">Базовый рацион</div>
+        <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус</div>
+        <div class="plan-opt-price">1 490 ₽/день</div>
+      </div>
+      <div>
+        <div class="plan-opt-kcal" style="font-size:28px"><span style="font-size:16px;font-weight:400">До </span>1500</div>
+        <div class="plan-opt-unit">ккал</div>
+      </div>
+    </button>
+    <button class="plan-opt boost" id="wpopt2000" onclick="selectPlan7('2000')">
+      <div>
+        <div class="plan-opt-name">С белковым бустером</div>
+        <div class="plan-opt-sub">Базовый + протеиновый перекус</div>
+        <div class="plan-opt-price">1 620 ₽/день</div>
+      </div>
+      <div>
+        <div class="plan-opt-kcal" style="font-size:28px">1500+</div>
+        <div class="plan-opt-unit">ккал</div>
+      </div>
+    </button>
+  </div>
+  <div class="week-days-wrap">
+    <div class="week-days-scroll">
+      <table class="week-days-table">
+        <thead><tr id="week-thead"></tr></thead>
+        <tbody id="week-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="week-progress" id="week-progress">
+    <span>Выбрано блюд: <span class="week-progress-count" id="week-sel-count">0</span> из <span id="week-total-count">28</span></span>
+    <span id="week-progress-hint">Выбери блюда на каждый день</span>
+  </div>
+  <div class="week-form">
+    <div class="calc-col" style="max-width:100%">
+      <div class="form-section">
+        <div class="form-section-title">Адрес доставки</div>
+        <div class="field">
+          <div class="field-label">Город <span class="req">*</span></div>
+          <input class="field-input" id="w7-fCity" type="text" placeholder="Нальчик" autocomplete="address-level2" oninput="filterRu(this);updateOrderBtn7()"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Улица <span class="req">*</span></div>
+          <input class="field-input" id="w7-fStreet" type="text" placeholder="ул. Кулиева" autocomplete="street-address" oninput="filterRu(this);updateOrderBtn7()"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field" style="margin-bottom:0">
+            <div class="field-label">Дом <span class="req">*</span></div>
+            <input class="field-input" id="w7-fHouse" type="text" placeholder="12А" oninput="updateOrderBtn7()"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <div class="field-label">Подъезд <span style="font-size:11px;color:var(--ink3);font-weight:300">(необяз.)</span></div>
+            <input class="field-input" id="w7-fEntrance" type="text" placeholder="3"/>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Квартира <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
+          <input class="field-input" id="w7-fApt" type="text" placeholder="47" autocomplete="address-line2"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Комментарий <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
+          <textarea class="field-input" id="w7-fComment" rows="2" placeholder="Код домофона, ориентир, пожелания к доставке..." style="resize:none;line-height:1.5"></textarea>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Контактные данные</div>
+        <div class="field">
+          <div class="field-label">Имя <span class="req">*</span></div>
+          <input class="field-input" id="w7-fName" type="text" placeholder="Ваше имя" autocomplete="given-name" oninput="updateOrderBtn7()"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Номер телефона <span class="req">*</span></div>
+          <div class="phone-wrap">
+            <span class="phone-prefix">+7</span>
+            <input class="field-input phone-input" id="w7-fPhone" type="tel" placeholder="(999) 000-00-00" maxlength="15" oninput="formatPhone7(this)"/>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Промокод <span style="font-size:11px;color:var(--ink3);font-weight:300">(необязательно)</span></div>
+          <input class="field-input" id="w7-fPromo" type="text" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();checkPromo7()"/>
+          <div id="w7-promoHint" style="font-size:12px;margin-top:5px;min-height:16px"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="delivery-info-msg">🚚 Стоимость доставки уже включена в стоимость блюд для Вашего удобства</div>
+      </div>
+      <div class="calc-bottom">
+        <div class="legal-checks">
+          <label class="legal-check">
+            <input type="checkbox" id="w7-chkOferta" onchange="updateOrderBtn7()">
+            <span>Принимаю <a href="oferta.html" target="_blank">публичную оферту</a></span>
+          </label>
+          <label class="legal-check">
+            <input type="checkbox" id="w7-chkPd" onchange="updateOrderBtn7()">
+            <span>Согласен на <a href="pd-policy.html" target="_blank">обработку персональных данных</a> (<a href="pd-consent.html" target="_blank">согласие</a>)</span>
+          </label>
+        </div>
+        <button class="order-btn" id="orderBtn7" disabled onclick="tryOrder7()">Оформить заказ на 7 дней</button>
+        <div class="order-hint" id="orderHint7">Выбери блюда на каждый день</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="training-section">
   <a class="training-full-btn" href="https://reformanalchik.ru" target="_blank" rel="noopener" onclick="trackTraining()">
     <span class="training-full-icon">🏃</span>
@@ -1296,18 +1528,19 @@ let MENU = {breakfast:[],lunch:[],snack:[],dinner:[],booster:[]};
 const MENU_CACHE_KEY = 'rf_menu_cache_v2';
 const MENU_CACHE_TTL = 60 * 60 * 1000; // 1 час
 
+function showModeSelector() {
+  document.getElementById('modeSelector').style.display = '';
+}
+
 async function loadMenuFromSheet() {
   const loader = document.getElementById('menuLoading');
-  const appEl  = document.querySelector('.app');
 
-  // Попробуй загрузить из кэша
   try {
     const cached = JSON.parse(localStorage.getItem(MENU_CACHE_KEY) || 'null');
     if (cached && cached.menu && (Date.now() - cached.ts) < MENU_CACHE_TTL) {
       MENU = cached.menu;
       if (loader) loader.style.display = 'none';
-      if (appEl)  appEl.style.display  = '';
-      // Обновить кэш в фоне
+      showModeSelector();
       fetchAndCacheMenu();
       return;
     }
@@ -1315,13 +1548,13 @@ async function loadMenuFromSheet() {
 
   if (!SHEET_CSV_URL) {
     MENU = MENU_FALLBACK;
+    showModeSelector();
     return;
   }
   if (loader) loader.style.display = 'block';
-  if (appEl)  appEl.style.display  = 'none';
   await fetchAndCacheMenu();
   if (loader) loader.style.display = 'none';
-  if (appEl)  appEl.style.display  = '';
+  showModeSelector();
 }
 
 async function fetchAndCacheMenu() {
@@ -1725,14 +1958,24 @@ function tryOrder() {
 }
 function closeModal() {
   document.getElementById('overlay').classList.remove('show');
+  // Reset 1-day state
   sel={breakfast:null,lunch:null,snack:null,dinner:null,booster:null};
   selDate=null;
-  document.getElementById('fName').value='';
-  document.getElementById('fPhone').value='';
-  document.getElementById('fComment').value='';
-  document.getElementById('fPromo').value='';
+  ['fName','fPhone','fComment','fPromo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
   renderCal();updateCalc();
+  // Reset 7-day state
+  sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,snack:null,booster:null}));
+  ['w7-fName','w7-fPhone','w7-fCity','w7-fStreet','w7-fHouse','w7-fApt','w7-fEntrance','w7-fComment','w7-fPromo'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const c1=document.getElementById('w7-chkOferta'); if(c1) c1.checked=false;
+  const c2=document.getElementById('w7-chkPd'); if(c2) c2.checked=false;
+  // Return to mode selector after 7-day order
+  if (document.getElementById('app7day').style.display !== 'none') {
+    document.getElementById('app7day').style.display = 'none';
+    document.getElementById('modeSelector').style.display = '';
+  }
 }
 /* ── ФОТО ИЗ GOOGLE ДИСКА ── */
 // photo_id берётся из колонки photo_id в Google Sheet
@@ -1743,6 +1986,294 @@ function getDrivePhotoUrl(photo_id) {
   if (!id) return '';
   return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w400';
 }
+/* ══════════════════════════════════════════════════
+   MODE SELECTION
+   ══════════════════════════════════════════════════ */
+function selectMode(mode) {
+  document.getElementById('modeSelector').style.display = 'none';
+  if (mode === '1day') {
+    document.getElementById('app1day').style.display = '';
+  } else {
+    document.getElementById('app7day').style.display = '';
+    build7DayUI();
+  }
+}
+function backToMode() {
+  document.getElementById('app1day').style.display = 'none';
+  document.getElementById('app7day').style.display = 'none';
+  document.getElementById('modeSelector').style.display = '';
+}
+
+/* ══════════════════════════════════════════════════
+   7-DAY MODE
+   ══════════════════════════════════════════════════ */
+let plan7 = '1600';
+let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,snack:null,booster:null}));
+const PLAN_PRICE = {'1600':1490, '2000':1620};
+const DAYS_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const MONTHS_SHORT_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+function get7DayDates() {
+  const msk = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
+  const daysToAdd = msk.getHours() < 12 ? 1 : 2;
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(msk);
+    d.setDate(d.getDate() + daysToAdd + i);
+    return d;
+  });
+}
+
+function selectPlan7(p) {
+  plan7 = p;
+  document.getElementById('wpopt1600').classList.toggle('on', p === '1600');
+  document.getElementById('wpopt2000').classList.toggle('on', p === '2000');
+  if (p === '1600') sel7.forEach(d => { d.booster = null; });
+  const price = PLAN_PRICE[p] * 7;
+  const el = document.getElementById('week-total-price');
+  if (el) el.textContent = price.toLocaleString('ru') + ' ₽';
+  document.querySelector('#app7day .mode-card-price-sub') && (document.querySelector('#app7day .mode-card-price-sub').textContent = PLAN_PRICE[p] + ' ₽ × 7 дней');
+  build7DayUI();
+}
+
+function build7DayUI() {
+  const dates = get7DayDates();
+  const mealTypes = plan7 === '2000'
+    ? ['breakfast','lunch','dinner','snack','booster']
+    : ['breakfast','lunch','dinner','snack'];
+  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',snack:'Перекус',booster:'Бустер'};
+
+  // Update total count
+  const total = 7 * mealTypes.length;
+  const tcEl = document.getElementById('week-total-count');
+  if (tcEl) tcEl.textContent = total;
+
+  // Build table header
+  const thead = document.getElementById('week-thead');
+  thead.innerHTML = '<th></th>' + mealTypes.map(m => `<th>${mealLabels[m]}</th>`).join('');
+
+  // Build table body
+  const tbody = document.getElementById('week-tbody');
+  tbody.innerHTML = '';
+
+  dates.forEach((date, idx) => {
+    const dow = date.getDay();
+    const menus = menuByDay[dow];
+    const tr = document.createElement('tr');
+
+    // Day label cell
+    const tdLabel = document.createElement('td');
+    tdLabel.innerHTML = `<div class="week-day-name">${DAYS_RU[dow]}</div><div class="week-day-date">${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}</div>`;
+    tr.appendChild(tdLabel);
+
+    mealTypes.forEach(mealType => {
+      const td = document.createElement('td');
+      td.dataset.meal = mealType;
+
+      let dishes;
+      if (mealType === 'booster' || mealType === 'snack') {
+        dishes = MENU[mealType] || [];
+      } else {
+        dishes = (MENU[mealType] || []).filter(d => menus.includes(d.day));
+      }
+
+      dishes.forEach(d => {
+        const tile = document.createElement('div');
+        tile.className = 'w7-dish' + (sel7[idx][mealType] === d.id ? ' on' : '');
+        tile.dataset.id = d.id;
+        tile.innerHTML = `<div class="w7-dish-name">${d.name}</div><div class="w7-dish-kcal">${d.kcal} ккал · ${d.w}</div>`;
+        tile.onclick = () => pick7(idx, mealType, d.id, td);
+        td.appendChild(tile);
+      });
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  update7Progress();
+  updateOrderBtn7();
+}
+
+function pick7(dayIdx, mealType, dishId, colEl) {
+  sel7[dayIdx][mealType] = sel7[dayIdx][mealType] === dishId ? null : dishId;
+  colEl.querySelectorAll('.w7-dish').forEach(tile => {
+    tile.classList.toggle('on', tile.dataset.id === sel7[dayIdx][mealType]);
+  });
+  update7Progress();
+  updateOrderBtn7();
+}
+
+function get7Counts() {
+  const types = plan7 === '2000'
+    ? ['breakfast','lunch','dinner','snack','booster']
+    : ['breakfast','lunch','dinner','snack'];
+  let selected = 0;
+  const total = 7 * types.length;
+  sel7.forEach(day => types.forEach(t => { if (day[t]) selected++; }));
+  return {selected, total};
+}
+
+function update7Progress() {
+  const {selected, total} = get7Counts();
+  const scEl = document.getElementById('week-sel-count');
+  if (scEl) scEl.textContent = selected;
+  const price = PLAN_PRICE[plan7] * 7;
+  const el = document.getElementById('week-total-price');
+  if (el) el.textContent = price.toLocaleString('ru') + ' ₽';
+  const hintEl = document.getElementById('week-progress-hint');
+  if (hintEl) {
+    const rem = total - selected;
+    hintEl.textContent = selected === total ? '✓ Все блюда выбраны' : `осталось ${rem}`;
+    hintEl.style.color = selected === total ? 'var(--green,#4e8c3a)' : 'var(--ink3)';
+  }
+}
+
+function getPhone7() {
+  return (document.getElementById('w7-fPhone')?.value || '').replace(/\D/g,'');
+}
+function formatPhone7(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length > 10) v = v.slice(0,10);
+  let out = '';
+  if (v.length > 0) out = '(' + v.slice(0,3);
+  if (v.length >= 4) out += ') ' + v.slice(3,6);
+  if (v.length >= 7) out += '-' + v.slice(6,8);
+  if (v.length >= 9) out += '-' + v.slice(8,10);
+  el.value = out;
+  updateOrderBtn7();
+}
+function checkPromo7() {
+  const val = document.getElementById('w7-fPromo').value.trim().toUpperCase();
+  const hint = document.getElementById('w7-promoHint');
+  if (!val) { hint.textContent=''; return null; }
+  if (PROMO_CODES[val]) {
+    hint.textContent = '✓ Промокод принят: ' + PROMO_CODES[val].label;
+    hint.style.color = '#2e7d32';
+    return PROMO_CODES[val];
+  } else {
+    hint.textContent = '✗ Промокод не найден';
+    hint.style.color = '#ce5b40';
+    return null;
+  }
+}
+function updateOrderBtn7() {
+  const {selected, total} = get7Counts();
+  const allDish = selected === total;
+  const name = document.getElementById('w7-fName')?.value.trim() || '';
+  const phone = getPhone7();
+  const city = document.getElementById('w7-fCity')?.value.trim() || '';
+  const street = document.getElementById('w7-fStreet')?.value.trim() || '';
+  const house = document.getElementById('w7-fHouse')?.value.trim() || '';
+  const chkOferta = document.getElementById('w7-chkOferta')?.checked;
+  const chkPd = document.getElementById('w7-chkPd')?.checked;
+  const ok = allDish && name && phone.length >= 10 && city && street && house && chkOferta && chkPd;
+  const btn = document.getElementById('orderBtn7');
+  if (btn) btn.disabled = !ok;
+  const hint = document.getElementById('orderHint7');
+  if (!hint) return;
+  const rem = total - selected;
+  if (!allDish) {
+    hint.textContent = rem === 1 ? 'Осталось выбрать 1 блюдо' : `Осталось выбрать блюд: ${rem}`;
+    hint.style.color = 'var(--ink3)';
+  } else if (!name) {
+    hint.textContent = '✏️ Введи имя для оформления заказа';
+    hint.style.color = 'var(--coral)';
+  } else if (phone.length < 10) {
+    hint.textContent = '📞 Введи номер телефона полностью';
+    hint.style.color = 'var(--coral)';
+  } else if (!city || !street || !house) {
+    hint.textContent = '🏠 Укажи адрес доставки';
+    hint.style.color = 'var(--coral)';
+  } else if (!chkOferta || !chkPd) {
+    hint.textContent = '☑️ Подтверди согласие с документами';
+    hint.style.color = 'var(--coral)';
+  } else {
+    hint.textContent = '✓ Всё готово — оформляй!';
+    hint.style.color = 'var(--green,#4e8c3a)';
+  }
+}
+function tryOrder7() {
+  const name = document.getElementById('w7-fName').value.trim();
+  const phone = getPhone7();
+  if (!name) { document.getElementById('w7-fName').classList.add('error'); document.getElementById('w7-fName').focus(); return; }
+  if (phone.length < 10) { document.getElementById('w7-fPhone').classList.add('error'); document.getElementById('w7-fPhone').focus(); return; }
+  document.getElementById('w7-fName').classList.remove('error');
+  document.getElementById('w7-fPhone').classList.remove('error');
+
+  const dates = get7DayDates();
+  const mealTypes = plan7 === '2000'
+    ? ['breakfast','lunch','dinner','snack','booster']
+    : ['breakfast','lunch','dinner','snack'];
+  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',snack:'Перекус',booster:'Бустер'};
+  const dayShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+  const promo = document.getElementById('w7-fPromo').value.trim();
+  const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
+  const comment = document.getElementById('w7-fComment').value.trim();
+  const totalPrice = PLAN_PRICE[plan7] * 7;
+  const finalPrice = promoData ? Math.max(0, totalPrice - promoData.discount) : totalPrice;
+
+  let lines = `<strong>${name}</strong> · +7 ${document.getElementById('w7-fPhone').value}<br>`;
+  lines += `Рацион на 7 дней: <strong>${finalPrice.toLocaleString('ru')} ₽</strong>`;
+  if (promoData) lines += ` <span style="color:var(--green,#4e8c3a)">(${promo}: ${promoData.label})</span>`;
+  lines += '<br>';
+  if (comment) lines += `Комментарий: ${comment}<br>`;
+  lines += '<br>';
+  dates.forEach((date, idx) => {
+    lines += `<strong>${dayShort[date.getDay()]}, ${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}:</strong><br>`;
+    mealTypes.forEach(t => {
+      const d = (MENU[t]||[]).find(x => x.id === sel7[idx][t]);
+      if (d) lines += `&nbsp;&nbsp;${mealLabels[t]}: ${d.name}<br>`;
+    });
+  });
+  document.getElementById('modalSummary').innerHTML = lines;
+  document.getElementById('overlay').classList.add('show');
+
+  (function(){
+    const weekDays = dates.map((date, idx) => {
+      const day = {};
+      mealTypes.forEach(t => {
+        const d = (MENU[t]||[]).find(x => x.id === sel7[idx][t]);
+        if (d) day[mealLabels[t]] = d.name;
+      });
+      return {date: date.toISOString().slice(0,10), dishes: day};
+    });
+    const order = {
+      id: Date.now(), date: new Date().toISOString(),
+      mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
+      plan: plan7 === '2000' ? 'С бустером' : 'Базовый',
+      totalPrice: finalPrice, promo, discount: promoData ? promoData.discount : 0,
+      comment, city: document.getElementById('w7-fCity').value.trim(),
+      street: document.getElementById('w7-fStreet').value.trim(),
+      house: document.getElementById('w7-fHouse').value.trim(),
+      days: weekDays
+    };
+    try {
+      const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
+      orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
+    } catch(e) {}
+    try {
+      const TG_TOKEN='8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8';
+      const TG_CHAT='936026927';
+      let msg = '🗓 *Заказ на 7 дней — reForma*\n\n'
+        + '👤 ' + order.name + '\n📞 ' + order.phone + '\n'
+        + '🥗 План: ' + order.plan + '\n💰 Сумма: ' + order.totalPrice.toLocaleString('ru') + ' ₽\n'
+        + (order.promo ? '🎟 Промокод: ' + order.promo + (order.discount ? ' (−' + order.discount + ' ₽)' : '') + '\n' : '')
+        + (order.comment ? '💬 ' + order.comment + '\n' : '')
+        + '📍 ' + order.city + ', ' + order.street + ', ' + order.house + '\n\n';
+      weekDays.forEach(wd => {
+        msg += `📅 ${wd.date}:\n`;
+        Object.entries(wd.dishes).forEach(([k,v]) => { msg += `  • ${k}: ${v}\n`; });
+      });
+      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'Markdown'})
+      }).catch(()=>{});
+    } catch(e) {}
+  })();
+}
+
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
   ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
