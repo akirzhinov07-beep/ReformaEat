@@ -982,8 +982,8 @@ nav{
 .week-total-price{font-family:'Awesome',serif;font-size:26px;font-weight:700;color:var(--coral)}
 /* ── HERO SUBTITLE ── */
 .hero-subtitle{
-  font-size:14px;color:var(--ink3);margin-top:8px;
-  min-height:20px;transition:opacity .3s;
+  font-size:16px;font-weight:700;color:var(--ink2);margin-top:10px;
+  min-height:22px;transition:opacity .3s;
   text-align:center;
 }
 /* ── APP BACK BAR ── */
@@ -1011,10 +1011,11 @@ nav{
 .week-day-name{font-weight:700;font-size:12px;color:var(--ink)}
 .week-day-date{font-size:11px;color:var(--ink3)}
 .week-day-done{
-  margin-left:auto;font-size:10px;font-weight:600;
-  color:var(--ink3);
+  margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;
 }
-.week-day-done.complete{color:var(--green,#4e8c3a)}
+.week-day-done-dishes{font-size:10px;font-weight:600;color:var(--ink3)}
+.week-day-done-kcal{font-size:11px;font-weight:700;color:var(--mc,var(--coral))}
+.week-day-done.complete .week-day-done-dishes{color:var(--green,#4e8c3a)}
 .week-meal-grid{
   display:flex;
 }
@@ -2098,6 +2099,10 @@ function build7DayUI() {
     const selDay = sel7[idx];
     const doneCnt = mealTypes.filter(t => selDay[t]).length;
     const complete = doneCnt === mealTypes.length;
+    const dayKcal = mealTypes.reduce((sum, t) => {
+      const d = selDay[t] ? (MENU[t]||[]).find(x=>x.id===selDay[t]) : null;
+      return sum + (d ? d.kcal : 0);
+    }, 0);
 
     const card = document.createElement('div');
     card.className = 'week-day-card';
@@ -2107,7 +2112,7 @@ function build7DayUI() {
     const hdr = document.createElement('div');
     hdr.className = 'week-day-hdr';
     hdr.innerHTML = `<div class="week-day-name">${DAYS_RU[dow]}</div><div class="week-day-date">${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}</div>`
-      + `<div class="week-day-done${complete?' complete':''}">${doneCnt}/${mealTypes.length}</div>`;
+      + `<div class="week-day-done${complete?' complete':''}"><span class="week-day-done-dishes">${doneCnt}/${mealTypes.length}</span>${dayKcal>0?`<span class="week-day-done-kcal">${dayKcal} ккал</span>`:''}</div>`;
     card.appendChild(hdr);
 
     // Meal grid
@@ -2162,10 +2167,18 @@ function pick7(dayIdx, mealType, dishId, colEl) {
     : ['breakfast','lunch','dinner','snack'];
   const doneCnt = mealTypes.filter(t => sel7[dayIdx][t]).length;
   const complete = doneCnt === mealTypes.length;
+  const dayKcal = mealTypes.reduce((sum, t) => {
+    const d = sel7[dayIdx][t] ? (MENU[t]||[]).find(x=>x.id===sel7[dayIdx][t]) : null;
+    return sum + (d ? d.kcal : 0);
+  }, 0);
   const card = document.querySelector(`.week-day-card[data-day-idx="${dayIdx}"]`);
   if (card) {
     const doneEl = card.querySelector('.week-day-done');
-    if (doneEl) { doneEl.textContent = `${doneCnt}/${mealTypes.length}`; doneEl.className = 'week-day-done' + (complete?' complete':''); }
+    if (doneEl) {
+      doneEl.className = 'week-day-done' + (complete ? ' complete' : '');
+      doneEl.innerHTML = `<span class="week-day-done-dishes">${doneCnt}/${mealTypes.length}</span>`
+        + (dayKcal > 0 ? `<span class="week-day-done-kcal">${dayKcal} ккал</span>` : '');
+    }
   }
   update7Progress();
   updateOrderBtn7();
