@@ -404,11 +404,22 @@ nav{
   border-right:1px solid var(--line);
   display:flex;align-items:center;
   justify-content:space-between;
+  position:relative;
 }
 .plan-opt:last-child{border-right:none}
 .plan-opt:hover{background:var(--bg)}
 .plan-opt.on{background:var(--blue-bg)}
+.plan-opt.on::after{
+  content:'выбрано';
+  position:absolute;top:8px;right:10px;
+  font-size:10px;font-weight:600;letter-spacing:.3px;
+  color:var(--blue);background:rgba(66,133,244,.12);
+  padding:2px 7px;border-radius:20px;
+}
 .plan-opt.boost.on{background:var(--coral-bg)}
+.plan-opt.boost.on::after{
+  color:var(--coral);background:rgba(206,91,64,.12);
+}
 .plan-opt-name{font-family:'Modulus',sans-serif;font-weight:700;font-size:14px;color:var(--ink)}
 .plan-opt-sub{font-size:12px;color:var(--ink3);font-weight:300;margin-top:3px}
 .plan-opt-kcal{
@@ -462,16 +473,6 @@ nav{
 .dish-row.on{
   background:var(--msel);
   border-left:3px solid var(--mc);
-}
-.dish-row.on::after{
-  content:'выбрано';
-  position:absolute;
-  top:8px;right:10px;
-  font-size:10px;font-weight:600;letter-spacing:.3px;
-  color:var(--mc);
-  background:rgba(206,91,64,.12);
-  padding:2px 7px;
-  border-radius:20px;
 }
 .dish-sel{
   width:20px;height:20px;min-width:20px;
@@ -809,6 +810,32 @@ nav{
 .training-btn-title{font-weight:800;font-size:13px;letter-spacing:.2px;line-height:1}
 .training-btn-sub{font-size:10px;font-weight:500;opacity:.82;letter-spacing:.4px;line-height:1;text-transform:uppercase;text-align:center}
 .training-btn-icon{font-size:15px;line-height:1}
+/* ── TRAINING SECTION ── */
+.training-section{
+  max-width:900px;margin:0 auto 32px;
+  padding:0 24px;
+}
+.training-full-btn{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,#ce5b40,#b8472e);
+  color:#fff;
+  border-radius:16px;
+  padding:16px 24px;
+  text-decoration:none;
+  cursor:pointer;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 4px 18px rgba(210,70,35,.25);
+  width:100%;
+}
+.training-full-btn:hover{
+  background:linear-gradient(135deg,#b8472e,#a33a22);
+  box-shadow:0 8px 28px rgba(210,70,35,.4);
+  transform:translateY(-2px);
+}
+.training-full-icon{font-size:28px;line-height:1;flex-shrink:0}
+.training-full-text{display:flex;flex-direction:column;gap:3px}
+.training-full-title{font-weight:800;font-size:15px;letter-spacing:.2px}
+.training-full-sub{font-size:11px;opacity:.85;letter-spacing:.5px;text-transform:uppercase}
 /* ── RESPONSIVE ── */
 @media(max-width:960px){
   .app{grid-template-columns:1fr}
@@ -937,42 +964,12 @@ nav{
     <button class="ptb on" onclick="selectPlan('1600')">1 600 ккал</button>
     <button class="ptb boost" onclick="selectPlan('2000')">2 000 ккал + бустер</button>
   </div>
-  <a class="training-btn" href="https://reformanalchik.ru" target="_blank" rel="noopener" onclick="trackTraining()">
-    <span class="training-btn-icon-wrap">🏃</span>
-    <span class="training-btn-text">
-      <span class="training-btn-title">Тренируйся с нами дома</span>
-      <span class="training-btn-sub">Начни прямо сейчас</span>
-    </span>
-  </a>
 </nav>
 <section class="hero">
   <div class="hero-orb3"></div>
   <div class="hero-l">
     <div class="hero-tagline-block">
       <h1 class="hero-tagline-main">Калории?<br><em>Уже посчитали.</em></h1>
-      <div class="hero-steps">
-        <div class="hero-step">
-          <div class="hero-step-icon">🥗</div>
-          <span>Собери меню</span>
-        </div>
-        <div class="hero-step-sep">→</div>
-        <div class="hero-step">
-          <div class="hero-step-icon">🛒</div>
-          <span>Оформи заказ</span>
-        </div>
-        <div class="hero-step-sep">→</div>
-        <div class="hero-step">
-          <div class="hero-step-icon">✨</div>
-          <span>Худей с удовольствием</span>
-        </div>
-      </div>
-      <a class="training-btn training-btn-mobile" href="https://reformanalchik.ru" target="_blank" rel="noopener" onclick="trackTraining()" style="display:none;margin-top:12px;align-self:center">
-        <span class="training-btn-icon-wrap" style="width:22px;height:22px;font-size:11px">🏃</span>
-        <span class="training-btn-text">
-          <span class="training-btn-title" style="font-size:10px">Тренируйся с нами дома</span>
-          <span class="training-btn-sub" style="font-size:8px">Начни прямо сейчас</span>
-        </span>
-      </a>
     </div>
   </div>
   <div class="hero-r" id="heroPhoto">
@@ -1179,6 +1176,15 @@ nav{
       <div class="order-hint" id="orderHint">Выбери блюда для каждого приёма пищи</div>
     </div>
   </div>
+</div>
+<div class="training-section">
+  <a class="training-full-btn" href="https://reformanalchik.ru" target="_blank" rel="noopener" onclick="trackTraining()">
+    <span class="training-full-icon">🏃</span>
+    <span class="training-full-text">
+      <span class="training-full-title">Тренируйся с нами дома</span>
+      <span class="training-full-sub">Начни прямо сейчас</span>
+    </span>
+  </a>
 </div>
 <div class="overlay" id="overlay">
   <div class="modal">
