@@ -1487,6 +1487,21 @@ nav{
    ══════════════════════════════════════════════════ */
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSvE1Aa_eS8z4p_Z_4xHxlpPclExV1ZX3ciyf3S5JZ84CDLyf9fooKpZtmIfXI7aHbVSUqvfAkgv4P-/pub?output=csv';
 
+/* ── ОБЛАЧНОЕ СОХРАНЕНИЕ ЗАКАЗОВ ──
+   Вставь сюда URL развёртывания из Google Apps Script (apps-script-orders.gs)
+   Пока пустой — заказы сохраняются только локально. */
+const APPS_SCRIPT_URL = '';
+const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
+
+function saveOrderToCloud(order) {
+  if (!APPS_SCRIPT_URL) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(order)
+  }).catch(function(){});
+}
+
 /* ── РЕЗЕРВНЫЕ ДАННЫЕ (если таблица не настроена или нет сети) ── */
 const MENU_FALLBACK = {
   breakfast:[
@@ -1927,6 +1942,7 @@ function tryOrder() {
       orders.unshift(order);
       localStorage.setItem('rf_orders',JSON.stringify(orders));
     }catch(e){}
+    saveOrderToCloud({...order, mode:'1day'});
     /* ── TELEGRAM NOTIFICATION ── */
     try{
       const TG_TOKEN='8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8';
@@ -2300,6 +2316,7 @@ function tryOrder7() {
       const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
     } catch(e) {}
+    saveOrderToCloud({...order, mode:'7day'});
     try {
       const TG_TOKEN='8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8';
       const TG_CHAT='936026927';
