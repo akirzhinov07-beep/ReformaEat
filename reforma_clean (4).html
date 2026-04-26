@@ -81,21 +81,7 @@ nav{
   text-transform:lowercase;padding-left:10px;
   border-left:1px solid var(--line);
 }
-.plan-toggle{
-  display:flex;background:var(--bg);
-  border-radius:100px;padding:3px;
-  border:1px solid var(--line);gap:2px;
-}
-.ptb{
-  padding:7px 18px;border-radius:100px;
-  border:none;background:transparent;
-  font-family:'Modulus',sans-serif;
-  font-weight:400;font-size:12px;
-  color:var(--ink3);cursor:pointer;
-  transition:all .18s;white-space:nowrap;
-}
-.ptb.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(107,158,196,.3)}
-.ptb.boost.on{background:var(--coral);box-shadow:0 2px 8px rgba(217,95,59,.3)}
+
 /* ── HERO ── */
 /* ── HERO: LIGHT ANIMATED ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -850,7 +836,6 @@ nav{
   .hero-tagline-block{text-align:center}
   .hero-orb3{display:none}
   nav{padding:0 16px}
-  .plan-toggle{display:none}
   .dish-row,.boost-row{padding:10px 16px}
   .meal-title-row,.booster-title-row{padding:14px 16px 10px}
   .plan-opt{padding:14px 16px}
@@ -1812,18 +1797,15 @@ document.getElementById('fPromo').addEventListener('input',updateOrderBtn);
 /* ── PLAN ── */
 function selectPlan(p) {
   plan=p;
-  const btns=document.querySelectorAll('.ptb');
   const p1=document.getElementById('popt1600');
   const p2=document.getElementById('popt2000');
   const bb=document.getElementById('boosterBlock');
   const br=document.getElementById('ol-booster-row');
   const bd=document.getElementById('boostDivider');
   if(p==='2000') {
-    btns[0].classList.remove('on');btns[1].classList.add('on');
     p1.classList.remove('on');p2.classList.add('on');
     bb.style.display='block';br.style.display='flex';bd.style.display='block';
   } else {
-    btns[1].classList.remove('on');btns[0].classList.add('on');
     p2.classList.remove('on');p1.classList.add('on');
     bb.style.display='none';br.style.display='none';bd.style.display='none';
     sel.booster=null;buildList('booster');
