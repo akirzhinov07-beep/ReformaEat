@@ -1082,6 +1082,25 @@ nav{
   .week-form{padding:0 12px}
   .week-progress{margin:8px 12px 0}
 }
+.delivery-date-badge{margin-top:10px;padding:14px 18px;color:#fff;border-radius:12px;font-size:15px;font-weight:700;text-align:center;}
+/* ── REGISTRATION OVERLAY ── */
+#regOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+#regOverlay.hidden{display:none;}
+.reg-card{background:var(--white);border-radius:20px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.reg-card-title{font-family:'Awesome',serif;font-size:22px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:6px;}
+.reg-card-sub{font-size:14px;color:var(--ink3);text-align:center;margin-bottom:24px;line-height:1.5;}
+.reg-field{margin-bottom:16px;}
+.reg-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.reg-field input{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;font-family:'Modulus',sans-serif;color:var(--ink);box-sizing:border-box;outline:none;transition:border-color .2s;}
+.reg-field input:focus{border-color:var(--blue);}
+.reg-field input.error{border-color:var(--coral);}
+.reg-phone-wrap{display:flex;align-items:center;border:1.5px solid #ddd;border-radius:10px;overflow:hidden;}
+.reg-phone-wrap:focus-within{border-color:var(--blue);}
+.reg-phone-wrap.error{border-color:var(--coral);}
+.reg-phone-prefix{padding:12px 10px 12px 14px;font-size:15px;color:var(--ink);background:var(--bg);border-right:1.5px solid #ddd;white-space:nowrap;}
+.reg-phone-wrap input{border:none!important;border-radius:0!important;flex:1;padding:12px 14px 12px 10px;font-size:15px;font-family:'Modulus',sans-serif;color:var(--ink);outline:none;}
+.reg-btn{width:100%;padding:14px;background:var(--ink);color:var(--white);border:none;border-radius:12px;font-size:16px;font-weight:700;font-family:'Modulus',sans-serif;cursor:pointer;margin-top:4px;transition:opacity .2s;}
+.reg-btn:active{opacity:.8;}
 </style>
 </head>
 <body>
@@ -1120,6 +1139,26 @@ nav{
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
+<!-- REGISTRATION OVERLAY -->
+<div id="regOverlay" class="hidden">
+  <div class="reg-card">
+    <div class="reg-card-title">Добро пожаловать!</div>
+    <div class="reg-card-sub">Представьтесь, чтобы продолжить.<br>Данные сохранятся для следующих заказов.</div>
+    <div class="reg-field">
+      <label>Имя <span style="color:var(--coral)">*</span></label>
+      <input id="regName" type="text" placeholder="Ваше имя" autocomplete="given-name"/>
+    </div>
+    <div class="reg-field">
+      <label>Телефон <span style="color:var(--coral)">*</span></label>
+      <div class="reg-phone-wrap" id="regPhoneWrap">
+        <span class="reg-phone-prefix">+7</span>
+        <input id="regPhone" type="tel" placeholder="(999) 000-00-00" maxlength="15" oninput="formatRegPhone(this)"/>
+      </div>
+    </div>
+    <button class="reg-btn" onclick="submitReg()">Продолжить →</button>
+  </div>
+</div>
+
 <!-- MODE SELECTOR -->
 <div class="mode-selector" id="modeSelector" style="display:none">
   <div class="mode-title">Как хотите питаться?</div>
@@ -1128,7 +1167,7 @@ nav{
     <button class="mode-card" onclick="selectMode('1day')">
       <div class="mode-card-icon">🍽</div>
       <div class="mode-card-title">На 1 день</div>
-      <div class="mode-card-sub">Выбери блюда на один день и укажи дату доставки</div>
+      <div class="mode-card-sub">Выбери блюда на один день — дата доставки определяется автоматически</div>
       <div class="mode-card-price">от 1 490 ₽</div>
     </button>
     <button class="mode-card week" onclick="selectMode('7day')">
@@ -1306,18 +1345,8 @@ nav{
       <div class="cal-section">
         <div class="cal-title">Дата доставки</div>
         <div class="delivery-info-msg">🚚 Стоимость доставки уже включена в стоимость блюд для Вашего удобства</div>
-        <div class="cal-notice">
-          Заказ на <span>завтра</span> принимается до <span>12:00 по Москве</span>.<br>
-          Сегодня в Москве: <span id="mskTime">--:--</span>
-        </div>
-        <div class="calendar">
-          <div class="cal-nav">
-            <button class="cal-arrow" id="calPrev" onclick="calShift(-1)">&#8249;</button>
-            <div class="cal-month" id="calMonth"></div>
-            <button class="cal-arrow" id="calNext" onclick="calShift(1)">&#8250;</button>
-          </div>
-          <div class="cal-grid" id="calGrid"></div>
-        </div>
+        <div class="cal-notice" id="deliveryNotice" style="padding:10px 0 4px"></div>
+        <div class="delivery-date-badge" id="deliveryDateBadge"></div>
       </div>
     </div>
     <div class="calc-bottom">
@@ -1570,7 +1599,12 @@ const MENU_CACHE_KEY = 'rf_menu_cache_v2';
 const MENU_CACHE_TTL = 60 * 60 * 1000; // 1 час
 
 function showModeSelector() {
-  document.getElementById('modeSelector').style.display = '';
+  const user = JSON.parse(localStorage.getItem('rf_user')||'null');
+  if (!user) {
+    document.getElementById('regOverlay').classList.remove('hidden');
+  } else {
+    initApp(user);
+  }
 }
 
 async function loadMenuFromSheet() {
@@ -1734,7 +1768,7 @@ function updateOrderBtn() {
   const house=document.getElementById('fHouse').value.trim();
   const chkOferta = document.getElementById('chkOferta')?.checked;
   const chkPd = document.getElementById('chkPd')?.checked;
-  const ok=allDish&&selDate&&name&&phone.length>=10&&city&&street&&house&&chkOferta&&chkPd;
+  const ok=allDish&&name&&phone.length>=10&&city&&street&&house&&chkOferta&&chkPd;
   document.getElementById('orderBtn').disabled=!ok;
   updateHint(allDish, done, rem);
 }
@@ -1747,16 +1781,11 @@ function updateHint(allDish, done, rem) {
   const phone=getPhone();
   const hint=document.getElementById('orderHint');
   // Highlight missing sections
-  document.querySelector('.cal-section').style.outline = (!selDate && allDishDone) ? '2px solid var(--coral)' : 'none';
-  document.querySelector('.cal-section').style.borderRadius = '8px';
-  document.getElementById('fName').style.borderColor = (!name && allDishDone && selDate) ? 'var(--coral)' : '';
-  document.getElementById('fPhone').style.borderColor = (phone.length<10 && allDishDone && selDate && name) ? 'var(--coral)' : '';
+  document.getElementById('fName').style.borderColor = (!name && allDishDone) ? 'var(--coral)' : '';
+  document.getElementById('fPhone').style.borderColor = (phone.length<10 && allDishDone && name) ? 'var(--coral)' : '';
   if (!allDishDone) {
     hint.textContent = rem===1 ? 'Осталось выбрать 1 блюдо' : `Осталось выбрать блюд: ${rem}`;
     hint.style.color='var(--ink3)';
-  } else if (!selDate) {
-    hint.textContent = '📅 Выбери дату доставки в календаре';
-    hint.style.color='var(--coral)';
   } else if (!name) {
     hint.textContent = '✏️ Введи имя для оформления заказа';
     hint.style.color='var(--coral)';
@@ -1814,85 +1843,40 @@ function selectPlan(p) {
   }
   updateCalc();
 }
-/* ── CALENDAR ── */
-let calYear, calMonth, selDate=null;
+/* ── DELIVERY DATE ── */
 function getMoscowNow() {
   return new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
 }
-function initCal() {
-  const now=getMoscowNow();
-  calYear=now.getFullYear();calMonth=now.getMonth();
-  renderCal();
-  setInterval(()=>{
-    const m=getMoscowNow();
-    document.getElementById('mskTime').textContent=
-      m.getHours().toString().padStart(2,'0')+':'+m.getMinutes().toString().padStart(2,'0');
-  },1000);
+function getAutoDeliveryDate() {
+  const msk = getMoscowNow();
+  const days = msk.getHours() < 12 ? 0 : 2;
+  const d = new Date(msk);
+  d.setDate(d.getDate() + days);
+  return d;
 }
-function calShift(d) {
-  calMonth+=d;
-  if(calMonth>11){calMonth=0;calYear++;}
-  if(calMonth<0) {calMonth=11;calYear--;}
-  renderCal();
+function getDeliveryDateStr() {
+  const d = getAutoDeliveryDate();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
-function renderCal() {
-  const now=getMoscowNow();
-  const todayY=now.getFullYear(),todayM=now.getMonth(),todayD=now.getDate();
-  const h=now.getHours(),mi=now.getMinutes();
-  // Tomorrow's order: allowed until 12:00 MSK today
-  const tomorrowOk = h<12||(h===12&&mi===0);
-  const months=['Январь','Февраль','Март','Апрель','Май','Июнь',
-                'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  document.getElementById('calMonth').textContent=months[calMonth]+' '+calYear;
-  const firstDay=new Date(calYear,calMonth,1).getDay();
-  const offset=(firstDay+6)%7; // Mon=0
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const grid=document.getElementById('calGrid');
-  grid.innerHTML='';
-  // Day headers
-  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>{
-    const el=document.createElement('div');
-    el.className='cal-dow';el.textContent=d;grid.appendChild(el);
-  });
-  // Find first visible (selectable) day
-  let firstVisible=1;
-  for(let day=1;day<=daysInMonth;day++){
-    const isToday2=calYear===todayY&&calMonth===todayM&&day===todayD;
-    const isTomorrow2=calYear===todayY&&calMonth===todayM&&day===todayD+1;
-    const isPast2=(calYear<todayY)||(calYear===todayY&&calMonth<todayM)||
-                  (calYear===todayY&&calMonth===todayM&&day<todayD);
-    const isBlocked2=isTomorrow2&&!tomorrowOk;
-    if(!isPast2&&!isToday2&&!isBlocked2){firstVisible=day;break;}
+function renderDeliveryDate() {
+  const msk = getMoscowNow();
+  const isBefore12 = msk.getHours() < 12;
+  const d = getAutoDeliveryDate();
+  const dateStr = d.toLocaleDateString('ru',{day:'numeric',month:'long',weekday:'long'});
+  const notice = document.getElementById('deliveryNotice');
+  const badge = document.getElementById('deliveryDateBadge');
+  if (!notice || !badge) return;
+  if (isBefore12) {
+    notice.innerHTML = '⏰ Сейчас <b>до 12:00 по Москве</b> — доставим <b>сегодня</b>';
+    badge.style.background = 'var(--blue,#3a7bfd)';
+  } else {
+    notice.innerHTML = '⏰ Сейчас <b>после 12:00 по Москве</b> — доставим <b>послезавтра</b>';
+    badge.style.background = 'var(--ink3,#888)';
   }
-  // Offset empty cells aligned to first visible day's weekday
-  const firstVisibleDow=new Date(calYear,calMonth,firstVisible).getDay();
-  const visOffset=(firstVisibleDow+6)%7;
-  for(let i=0;i<visOffset;i++){
-    const el=document.createElement('div');el.className='cal-day empty';grid.appendChild(el);
-  }
-  // Render only available days
-  for(let day=firstVisible;day<=daysInMonth;day++){
-    const isTomorrow=calYear===todayY&&calMonth===todayM&&day===todayD+1;
-    const isTomorrowBlocked=isTomorrow&&!tomorrowOk;
-    if(isTomorrowBlocked) continue;
-    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const isSelected=selDate===ds;
-    const el=document.createElement('div');
-    el.className='cal-day'+(isSelected?' selected':'');
-    el.textContent=day;
-    el.onclick=()=>pickDate(ds,el);
-    grid.appendChild(el);
-  }
-  document.getElementById('calPrev').disabled=
-    calYear===todayY&&calMonth===todayM;
-  document.getElementById('calNext').disabled=
-    calMonth===todayM+2||(calMonth<=1&&calYear===todayY&&todayM>=10);
-}
-function pickDate(ds, el) {
-  selDate=selDate===ds?null:ds;
-  document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
-  if(selDate) el.classList.add('selected');
-  updateOrderBtn();
+  badge.textContent = '📅 ' + dateStr;
 }
 /* ── PROMO CODES ── */
 const PROMO_CODES = {
@@ -1931,10 +1915,9 @@ function tryOrder() {
   const types=plan==='2000'?['breakfast','lunch','snack','dinner','booster']:['breakfast','lunch','snack','dinner'];
   const labels={breakfast:'Завтрак',lunch:'Обед',snack:'Перекус',dinner:'Ужин',booster:'Бустер'};
   let lines=`<strong>${name}</strong> · +7 ${document.getElementById('fPhone').value}<br>`;
-  if(selDate) {
-    const d=new Date(selDate+'T12:00:00');
-    lines+=`Доставка: <strong>${d.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'})}</strong><br>`;
-  }
+  const autoDeliveryDate = getAutoDeliveryDate();
+  const autoDateStr = getDeliveryDateStr();
+  lines+=`Доставка: <strong>${autoDeliveryDate.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'})}</strong><br>`;
   const comment=document.getElementById('fComment').value.trim();
   const promo=document.getElementById('fPromo').value.trim();
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
@@ -1964,7 +1947,7 @@ function tryOrder() {
       date: new Date().toISOString(),
       name: document.getElementById('fName').value.trim(),
       phone: '+7 '+document.getElementById('fPhone').value,
-      deliveryDate: selDate||'',
+      deliveryDate: autoDateStr||'',
       comment: document.getElementById('fComment').value.trim(),
       promo: document.getElementById('fPromo').value.trim(),
       discount: promoData ? promoData.discount : 0,
@@ -2001,10 +1984,10 @@ function closeModal() {
   document.getElementById('overlay').classList.remove('show');
   // Reset 1-day state
   sel={breakfast:null,lunch:null,snack:null,dinner:null,booster:null};
-  selDate=null;
   ['fName','fPhone','fComment','fPromo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  prefillUserData();
   ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
-  renderCal();updateCalc();
+  renderDeliveryDate();updateCalc();
   // Reset 7-day state
   sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,snack:null,booster:null}));
   ['w7-fName','w7-fPhone','w7-fCity','w7-fStreet','w7-fHouse','w7-fApt','w7-fEntrance','w7-fComment','w7-fPromo'].forEach(id => {
@@ -2012,10 +1995,16 @@ function closeModal() {
   });
   const c1=document.getElementById('w7-chkOferta'); if(c1) c1.checked=false;
   const c2=document.getElementById('w7-chkPd'); if(c2) c2.checked=false;
-  // Return to mode selector after 7-day order
-  if (document.getElementById('app7day').style.display !== 'none') {
+  // After order: navigate based on user history
+  if (document.getElementById('app1day').style.display !== 'none') {
+    // After 1-day order: if now returning user, go to 7-day
+    if (isReturningUser()) {
+      document.getElementById('app1day').style.display = 'none';
+      selectMode('7day');
+    }
+  } else if (document.getElementById('app7day').style.display !== 'none') {
     document.getElementById('app7day').style.display = 'none';
-    document.getElementById('modeSelector').style.display = '';
+    initApp(JSON.parse(localStorage.getItem('rf_user')||'null'));
   }
 }
 /* ── ФОТО ИЗ GOOGLE ДИСКА ── */
@@ -2039,17 +2028,24 @@ function selectMode(mode) {
   if (mode === '1day') {
     document.getElementById('app1day').style.display = '';
     setHeroSubtitle('Собери себе рацион на день');
+    prefillUserData();
+    renderDeliveryDate();
   } else {
     document.getElementById('app7day').style.display = '';
     setHeroSubtitle('Собери ниже рацион на каждый день недели');
+    prefillUserData();
     build7DayUI();
   }
 }
 function backToMode() {
   document.getElementById('app1day').style.display = 'none';
   document.getElementById('app7day').style.display = 'none';
-  document.getElementById('modeSelector').style.display = '';
-  setHeroSubtitle('');
+  if (isReturningUser()) {
+    selectMode('7day');
+  } else {
+    document.getElementById('modeSelector').style.display = '';
+    setHeroSubtitle('');
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -2358,11 +2354,75 @@ function tryOrder7() {
   })();
 }
 
+/* ── REGISTRATION ── */
+function formatRegPhone(el) {
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>10) v=v.slice(0,10);
+  let out='';
+  if(v.length>0) out='('+v.slice(0,3);
+  if(v.length>=4) out+=') '+v.slice(3,6);
+  if(v.length>=7) out+='-'+v.slice(6,8);
+  if(v.length>=9) out+='-'+v.slice(8,10);
+  el.value=out;
+}
+function getRegPhone() {
+  return document.getElementById('regPhone').value.replace(/\D/g,'');
+}
+function submitReg() {
+  const name = document.getElementById('regName').value.trim();
+  const phone = getRegPhone();
+  const nameEl = document.getElementById('regName');
+  const phoneWrap = document.getElementById('regPhoneWrap');
+  nameEl.classList.remove('error'); phoneWrap.classList.remove('error');
+  if (!name) { nameEl.classList.add('error'); nameEl.focus(); return; }
+  if (phone.length < 10) { phoneWrap.classList.add('error'); document.getElementById('regPhone').focus(); return; }
+  const user = {name, phone};
+  localStorage.setItem('rf_user', JSON.stringify(user));
+  document.getElementById('regOverlay').classList.add('hidden');
+  initApp(user);
+}
+function isReturningUser() {
+  try {
+    const user = JSON.parse(localStorage.getItem('rf_user')||'null');
+    if (!user) return false;
+    const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
+    const up = user.phone.replace(/\D/g,'').slice(-10);
+    return orders.some(o => o.phone && o.phone.replace(/\D/g,'').slice(-10) === up);
+  } catch(e) { return false; }
+}
+function formatPhoneStr(digits) {
+  let v=(digits||'').replace(/\D/g,'').slice(-10);
+  if(!v) return '';
+  let out='('+v.slice(0,3);
+  if(v.length>=4) out+=') '+v.slice(3,6);
+  if(v.length>=7) out+='-'+v.slice(6,8);
+  if(v.length>=9) out+='-'+v.slice(8,10);
+  return out;
+}
+function prefillUserData() {
+  try {
+    const user = JSON.parse(localStorage.getItem('rf_user')||'null');
+    if (!user) return;
+    const n1=document.getElementById('fName'); if(n1&&!n1.value) n1.value=user.name;
+    const p1=document.getElementById('fPhone'); if(p1&&!p1.value) p1.value=formatPhoneStr(user.phone);
+    const n7=document.getElementById('w7-fName'); if(n7&&!n7.value) n7.value=user.name;
+    const p7=document.getElementById('w7-fPhone'); if(p7&&!p7.value) p7.value=formatPhoneStr(user.phone);
+  } catch(e){}
+}
+function initApp(user) {
+  if (isReturningUser()) {
+    document.getElementById('modeSelector').style.display = 'none';
+    selectMode('7day');
+  } else {
+    document.getElementById('modeSelector').style.display = '';
+    setHeroSubtitle('');
+  }
+}
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
   ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
   updateCalc();
-  initCal();
+  renderDeliveryDate();
 });
 
 /* ── TELEGRAM MINI APP ── */
