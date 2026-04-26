@@ -1526,38 +1526,74 @@ let _pendingPaymentOrder = null;
 let _pendingPaymentAmount = 0;
 
 function startPayment() {
-  const btn = document.getElementById('modalPayBtn');
+  const btn     = document.getElementById('modalPayBtn');
   const loading = document.getElementById('modalPayLoading');
-  btn.disabled = true;
+  btn.disabled  = true;
   loading.textContent = 'Создаём платёж…';
 
-  const order = _pendingPaymentOrder;
+  const order  = _pendingPaymentOrder;
   const amount = _pendingPaymentAmount;
+  const tg     = window.Telegram?.WebApp;
+  const inTG   = tg && tg.initData && tg.initData.length > 0;
 
-  fetch('/create-payment.php', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      orderId:     String(order.id),
-      amount:      amount,
-      description: 'reForma eat — ' + (order.plan||'рацион'),
-      name:        order.name,
-      phone:       order.phone
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.ok && data.confirmation_url) {
-      window.location.href = data.confirmation_url;
-    } else {
-      loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
-      btn.disabled = false;
-    }
-  })
-  .catch(() => {
-    loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
-    btn.disabled = false;
+  const body = JSON.stringify({
+    orderId:     String(order.id),
+    amount:      amount,
+    description: 'reForma eat — ' + (order.plan || 'рацион'),
+    name:        order.name,
+    phone:       order.phone
   });
+
+  if (inTG) {
+    // ── Telegram Mini App: нативная оплата ──
+    fetch('/create-tg-invoice.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: body
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok && data.invoice_link) {
+        loading.textContent = '';
+        tg.openInvoice(data.invoice_link, function(status) {
+          if (status === 'paid') {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('overlaySuccess').classList.add('show');
+          } else if (status === 'cancelled' || status === 'failed') {
+            loading.textContent = '⚠️ Оплата не завершена. Попробуйте ещё раз.';
+            btn.disabled = false;
+          }
+        });
+      } else {
+        loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
+      btn.disabled = false;
+    });
+  } else {
+    // ── Браузер: редирект на страницу ЮКасса ──
+    fetch('/create-payment.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: body
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok && data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else {
+        loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
+      btn.disabled = false;
+    });
+  }
 }
 
 function closeSuccess() {
