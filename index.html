@@ -768,6 +768,23 @@ nav{
   transition:background .2s;
 }
 .modal-ok:hover{background:#4d7fa0}
+.modal-pay-btn{
+  display:block;width:100%;padding:16px;
+  background:var(--coral);color:#fff;border:none;border-radius:14px;
+  font-family:'Modulus',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:opacity .2s;margin-bottom:10px;
+}
+.modal-pay-btn:hover{opacity:.88}
+.modal-pay-btn:disabled{opacity:.5;cursor:not-allowed}
+.modal-cancel-btn{
+  background:none;border:none;color:var(--ink3);font-size:13px;
+  cursor:pointer;font-family:'Modulus',sans-serif;padding:6px 12px;
+}
+.modal-pay-loading{font-size:13px;color:var(--ink3);margin-top:8px;min-height:18px;}
+.modal-price-big{
+  font-family:'Awesome',serif;font-size:32px;font-weight:700;
+  color:var(--coral);margin:8px 0 20px;
+}
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 /* ── TRAINING BUTTON ── */
 .training-btn{
@@ -1461,11 +1478,23 @@ nav{
 </div>
 <div class="overlay" id="overlay">
   <div class="modal">
-    <div class="modal-icon">🎉</div>
-    <h2>Заказ принят!</h2>
+    <div class="modal-icon" id="modalIcon">🧾</div>
+    <h2 id="modalTitle">Заказ сформирован</h2>
     <div class="modal-summary" id="modalSummary"></div>
-    <p>Мы свяжемся с тобой для подтверждения доставки.</p>
-    <button class="modal-ok" onclick="closeModal()">Отлично!</button>
+    <div class="modal-price-big" id="modalPrice"></div>
+    <button class="modal-pay-btn" id="modalPayBtn" onclick="startPayment()">Оплатить</button>
+    <div class="modal-pay-loading" id="modalPayLoading"></div>
+    <button class="modal-cancel-btn" onclick="closeModal()">Отмена</button>
+  </div>
+</div>
+
+<!-- PAYMENT SUCCESS OVERLAY -->
+<div class="overlay" id="overlaySuccess">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h2>Оплата прошла!</h2>
+    <p style="margin-bottom:24px">Заказ оплачен и принят в работу.<br>Мы пришлём подтверждение в ближайшее время.</p>
+    <button class="modal-ok" onclick="closeSuccess()">Отлично!</button>
   </div>
 </div>
 <script>
@@ -1492,6 +1521,61 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSvE1Aa_e
    Пока пустой — заказы сохраняются только локально. */
 const APPS_SCRIPT_URL = '';
 const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
+
+let _pendingPaymentOrder = null;
+let _pendingPaymentAmount = 0;
+
+function startPayment() {
+  const btn = document.getElementById('modalPayBtn');
+  const loading = document.getElementById('modalPayLoading');
+  btn.disabled = true;
+  loading.textContent = 'Создаём платёж…';
+
+  const order = _pendingPaymentOrder;
+  const amount = _pendingPaymentAmount;
+
+  fetch('/create-payment.php', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      orderId:     String(order.id),
+      amount:      amount,
+      description: 'reForma eat — ' + (order.plan||'рацион'),
+      name:        order.name,
+      phone:       order.phone
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok && data.confirmation_url) {
+      window.location.href = data.confirmation_url;
+    } else {
+      loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
+      btn.disabled = false;
+    }
+  })
+  .catch(() => {
+    loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
+    btn.disabled = false;
+  });
+}
+
+function closeSuccess() {
+  document.getElementById('overlaySuccess').classList.remove('show');
+  closeModal();
+}
+
+// Show success overlay if returning from YooKassa
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') {
+    window.addEventListener('load', function() {
+      document.getElementById('overlaySuccess').classList.add('show');
+      // Clean URL
+      history.replaceState({}, '', window.location.pathname);
+    });
+  }
+})();
 
 function saveOrderToCloud(order) {
   if (!APPS_SCRIPT_URL) return;
@@ -1914,7 +1998,14 @@ function tryOrder() {
     const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
     if(d) lines+=`${labels[t]}: ${d.name}<br>`;
   });
+  const amount1day = plan==='2000' ? 1620 : 1490;
+  const discountAmt = promoData ? promoData.discount : 0;
+  const totalAmt = Math.max(0, amount1day - discountAmt);
   document.getElementById('modalSummary').innerHTML=lines;
+  document.getElementById('modalPrice').textContent = totalAmt.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPayBtn').textContent = 'Оплатить ' + totalAmt.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPayLoading').textContent = '';
+  document.getElementById('modalPayBtn').disabled = false;
   document.getElementById('overlay').classList.add('show');
   /* ── SAVE ORDER ── */
   (function(){
@@ -1933,10 +2024,12 @@ function tryOrder() {
       deliveryDate: autoDateStr||'',
       comment: document.getElementById('fComment').value.trim(),
       promo: document.getElementById('fPromo').value.trim(),
-      discount: promoData ? promoData.discount : 0,
+      discount: discountAmt,
       plan: plan==='2000'?'2000 ккал':'1600 ккал',
       dishes: dishes
     };
+    _pendingPaymentOrder = order;
+    _pendingPaymentAmount = totalAmt;
     try{
       const orders=JSON.parse(localStorage.getItem('rf_orders')||'[]');
       orders.unshift(order);
@@ -2291,7 +2384,12 @@ function tryOrder7() {
       if (d) lines += `&nbsp;&nbsp;${mealLabels[t]}: ${d.name}<br>`;
     });
   });
+  const total7 = _pendingPaymentAmount || 0;
   document.getElementById('modalSummary').innerHTML = lines;
+  document.getElementById('modalPrice').textContent = total7.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPayBtn').textContent = 'Оплатить ' + total7.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPayLoading').textContent = '';
+  document.getElementById('modalPayBtn').disabled = false;
   document.getElementById('overlay').classList.add('show');
 
   (function(){
@@ -2313,6 +2411,8 @@ function tryOrder7() {
       house: document.getElementById('w7-fHouse').value.trim(),
       days: weekDays
     };
+    _pendingPaymentOrder = order;
+    _pendingPaymentAmount = order.totalPrice || 0;
     try {
       const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
