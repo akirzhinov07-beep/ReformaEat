@@ -1628,34 +1628,36 @@ function saveOrderToCloud(order) {
 /* ── РЕЗЕРВНЫЕ ДАННЫЕ (если таблица не настроена или нет сети) ── */
 const MENU_FALLBACK = {
   breakfast:[
-    {id:'b1',name:'Овсянка с ягодами и семенами чиа',kcal:380,p:14,f:11,c:55,day:'День 1',w:'280 г'},
-    {id:'b2',name:'Сырники творожные со сметаной и ягодами',kcal:410,p:26,f:14,c:36,day:'День 2',w:'~330 г'},
-    {id:'b3',name:'Смузи-боул «Энергия» + ореховая паста',kcal:410,p:10,f:12,c:68,day:'День 3',w:'315 г'},
-    {id:'b4',name:'Омлет с овощами и сыром + грецкие орехи',kcal:430,p:26,f:24,c:16,day:'День 4',w:'~300 г'},
+    {id:'b1',name:'Турецкий завтрак',kcal:395,p:26,f:22,c:14,day:'День 1',w:'280 г',photo_id:'1jFEu2HXDMIzx_4_74_Xv4nIL4gjL0ixr'},
+    {id:'b2',name:'ПП хачапури',kcal:385,p:24,f:14,c:30,day:'День 2',w:'250 г',photo_id:'1bM5fg4SlooEdt7weVQyELL1OWVkX-bMi'},
+    {id:'b3',name:'Сырники со сметаной',kcal:400,p:24,f:14,c:36,day:'День 3',w:'280 г',photo_id:'1QSi6-RnHy2LzEBWrpjAVgDEkaW06u3Gc'},
+    {id:'b4',name:'Гранола с йогуртом',kcal:390,p:14,f:14,c:50,day:'День 4',w:'290 г',photo_id:'1F18uhsQvhcK72mJbEyvL6lMmcRp2UqDb'},
+    {id:'b5',name:'Кабачковые вафли',kcal:365,p:18,f:16,c:24,day:'День 5',w:'260 г',photo_id:'1NpbyIOSehN_1gaI5zf1O3mmeSyVMkobG'},
   ],
   lunch:[
-    {id:'l1',name:'Куриный салат с киноа и авокадо',kcal:550,p:42,f:20,c:52,day:'День 1',w:'480 г'},
-    {id:'l2',name:'Говядина с гречкой и тушёной капустой',kcal:520,p:42,f:15,c:55,day:'День 2',w:'450 г'},
-    {id:'l3',name:'Куриные котлеты с бурым рисом и салатом',kcal:480,p:38,f:14,c:52,day:'День 3',w:'450 г'},
-    {id:'l4',name:'Борщ с говядиной + хлеб + сметана',kcal:480,p:32,f:18,c:50,day:'День 4',w:'~500 г'},
-  ],
-  snack:[
-    {id:'s1',name:'Яблоко + грецкие орехи',kcal:200,p:3,f:12,c:18,day:'День 1',w:'170 г'},
-    {id:'s2',name:'Груша + миндаль',kcal:210,p:4,f:14,c:16,day:'День 2',w:'175 г'},
-    {id:'s3',name:'Творог 5% с ягодами',kcal:190,p:22,f:8,c:10,day:'День 3',w:'200 г'},
-    {id:'s4',name:'Мини-запеканка творожная',kcal:220,p:16,f:8,c:18,day:'День 4',w:'110 г'},
+    {id:'l1',name:'Паста болоньеза + микс салатов',kcal:490,p:30,f:16,c:52,day:'День 1',w:'450 г',photo_id:'1XnlRJoqfLuDGdZ4-XuSXRPxnabk9Q1lF'},
+    {id:'l2',name:'Котлеты куриные с рисом и свежим салатом',kcal:455,p:34,f:12,c:42,day:'День 2',w:'450 г',photo_id:'1_XytaJhOlEXQSMhvDpGDuDa7VaJWMvV0'},
+    {id:'l3',name:'Форель с гречкой, кукурузой и брокколи',kcal:465,p:30,f:12,c:46,day:'День 3',w:'430 г',photo_id:'138MaCiPQu1wSnot2E_zgpgzN5QXJtcPu'},
+    {id:'l4',name:'Борщ со сметаной и хлебом',kcal:470,p:26,f:14,c:48,day:'День 4',w:'500 г',photo_id:'1jdHpXrz28GxdGpSe-7F05d8R9Ni06zIn'},
+    {id:'l5',name:'Куриный стейк с булгуром + морковный салат',kcal:465,p:36,f:14,c:38,day:'День 5',w:'430 г',photo_id:'1CpJwuIkHqTBi8owQjU7tmbki_zeJReFk'},
   ],
   dinner:[
-    {id:'d1',name:'Форель на пару с овощным рагу',kcal:450,p:38,f:24,c:18,day:'День 1',w:'400 г'},
-    {id:'d2',name:'Цезарь с курицей (здоровая версия)',kcal:420,p:44,f:16,c:20,day:'День 2',w:'400 г'},
-    {id:'d3',name:'Индейка с кускусом и овощами гриль',kcal:450,p:38,f:12,c:48,day:'День 3',w:'450 г'},
-    {id:'d4',name:'Говяжьи медальоны с овощами и соусом песто',kcal:430,p:38,f:24,c:15,day:'День 4',w:'380 г'},
+    {id:'d1',name:'Белая рыба на гриле с картофелем, горошком и квашеной капустой',kcal:400,p:30,f:10,c:36,day:'День 1',w:'400 г',photo_id:'1THQtwuC8Z5ZX0UAb6O_odTJjCNLNRVZo'},
+    {id:'d2',name:'Медальоны на гриле с миксом салатов',kcal:390,p:32,f:20,c:8,day:'День 2',w:'380 г',photo_id:'1BQiZo1gu0SbXw2EpXl_iKPjrojwCeQrb'},
+    {id:'d3',name:'ПП шаурма с курицей',kcal:430,p:28,f:12,c:40,day:'День 3',w:'360 г',photo_id:'1TN3GXP1vewSeSUmpwLLzV18ySxWVkSnY'},
+    {id:'d4',name:'ПП вок с индейкой',kcal:445,p:32,f:10,c:44,day:'День 4',w:'400 г',photo_id:'1PlJhjvnld4bzAhE8pRPQdipvnn-aT0hR'},
+    {id:'d5',name:'Куриные котлеты + овощи гриль',kcal:385,p:28,f:16,c:20,day:'День 5',w:'380 г',photo_id:'1pj7Cb58J82Zc_fx4Hrcfm0E5fFN2OIU5'},
+  ],
+  snack:[
+    {id:'s1',name:'Дольки яблока с морковными палочками',kcal:120,p:1,f:0,c:28,day:'',w:'200 г',photo_id:'1mhxQkdBww5_RjTlvKWF3gDvyPSz5-UlZ'},
+    {id:'s2',name:'Банан',kcal:115,p:1,f:0,c:28,day:'',w:'120 г',photo_id:'1AGcj-bmBcPNJlzps5Z8GLzLpX97R6y75'},
+    {id:'s3',name:'Сухофрукты + орехи',kcal:180,p:3,f:10,c:22,day:'',w:'60 г',photo_id:'1sOv6Vvc56GidGdL8NgU_V63AcGWw7eBV'},
   ],
   booster:[
-    {id:'bo1',name:'Куриное филе запечённое',kcal:165,p:31,f:3,c:0,w:'100 г'},
-    {id:'bo2',name:'Креветки отварные',kcal:95,p:22,f:1,c:0,w:'100 г'},
-    {id:'bo3',name:'Филе форели запечённое',kcal:180,p:20,f:11,c:0,w:'100 г'},
-    {id:'bo4',name:'Яйца вареные вкрутую',kcal:155,p:13,f:10,c:1,w:'100 г (2 шт.)'},
+    {id:'bo1',name:'Куриное филе запечённое + кукуруза',kcal:225,p:20,f:10,c:12,day:'',w:'120 г',photo_id:'1VV59LVMkM-pdlae144xVmiBDhMnr9FQG'},
+    {id:'bo2',name:'Яйца варёные (2 шт.) + зеленый горошек',kcal:210,p:17,f:10,c:8,day:'',w:'2 шт.',photo_id:'1YnMwyAI8PzfCs7Z-6EQPzhr6UzQRb5R8'},
+    {id:'bo3',name:'Креветки',kcal:95,p:22,f:11,c:0,day:'',w:'100 г',photo_id:'1zeUglOE7-NCyK-EeFxJX3fJvlg3e0Yzs'},
+    {id:'bo4',name:'Форель запеченная + зеленый горошек',kcal:235,p:24,f:11,c:8,day:'',w:'120 г',photo_id:'1nBwFidjQUNKe7IbNbhfhCwT4cYrIkgT_'},
   ],
 };
 
