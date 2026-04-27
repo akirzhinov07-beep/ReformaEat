@@ -918,7 +918,7 @@ nav{
   .plan-opt-kcal{font-size:22px}
   .plan-opt-name{font-size:12px}
   .plan-opt-sub{font-size:10px}
-  .plan-opt-price{font-size:20px}
+  .plan-opt-price{font-size:17px}
   .plan-opt-kcal-badge{font-size:10px;padding:2px 6px}
   .ol-cat{font-size:9px}
   .ol-val{font-size:11px}
@@ -941,7 +941,7 @@ nav{
 .plan-opt-price{
   font-family:'Awesome',serif;
   font-size:30px;font-weight:600;
-  color:var(--coral);line-height:1;text-align:right;
+  color:var(--coral);line-height:1;text-align:right;white-space:nowrap;
 }
 .plan-opt.on .plan-opt-price{color:var(--blue)}
 /* ── LEGAL CHECKBOXES ── */
@@ -2141,6 +2141,7 @@ function setHeroSubtitle(text) {
 }
 function selectMode(mode) {
   document.getElementById('modeSelector').style.display = 'none';
+  const returning = isReturningUser();
   if (mode === '1day') {
     document.getElementById('app1day').style.display = '';
     setHeroSubtitle('Собери себе рацион на день');
@@ -2152,6 +2153,10 @@ function selectMode(mode) {
     prefillUserData();
     build7DayUI();
   }
+  const backBar = document.querySelector('.app-back-bar');
+  const weekBack = document.querySelector('.week-back-btn');
+  if (backBar)  backBar.style.display  = returning ? 'none' : '';
+  if (weekBack) weekBack.style.display = returning ? 'none' : '';
 }
 function backToMode() {
   document.getElementById('app1day').style.display = 'none';
