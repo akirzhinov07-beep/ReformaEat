@@ -1158,7 +1158,7 @@ nav{
         <input id="regPhone" type="tel" placeholder="(999) 000-00-00" maxlength="15" oninput="formatRegPhone(this)"/>
       </div>
     </div>
-    <button class="reg-btn" onclick="submitReg()">Продолжить →</button>
+    <button class="reg-btn" id="regBtn" onclick="submitReg()">Продолжить →</button>
   </div>
 </div>
 
@@ -2073,6 +2073,7 @@ function tryOrder() {
       const orders=JSON.parse(localStorage.getItem('rf_orders')||'[]');
       orders.unshift(order);
       localStorage.setItem('rf_orders',JSON.stringify(orders));
+      localStorage.setItem('rf_returning','1');
     }catch(e){}
     saveOrderToCloud({...order, mode:'1day'});
     /* ── TELEGRAM NOTIFICATION ── */
@@ -2460,6 +2461,7 @@ function tryOrder7() {
     try {
       const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
+      localStorage.setItem('rf_returning','1');
     } catch(e) {}
     saveOrderToCloud({...order, mode:'7day'});
     try {
@@ -2497,7 +2499,7 @@ function formatRegPhone(el) {
 function getRegPhone() {
   return document.getElementById('regPhone').value.replace(/\D/g,'');
 }
-function submitReg() {
+async function submitReg() {
   const name = document.getElementById('regName').value.trim();
   const phone = getRegPhone();
   const nameEl = document.getElementById('regName');
@@ -2507,11 +2509,30 @@ function submitReg() {
   if (phone.length < 10) { phoneWrap.classList.add('error'); document.getElementById('regPhone').focus(); return; }
   const user = {name, phone};
   localStorage.setItem('rf_user', JSON.stringify(user));
+
+  if (APPS_SCRIPT_URL) {
+    const btn = document.getElementById('regBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Проверяем…'; }
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL + '?token=' + APPS_SCRIPT_TOKEN);
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.orders)) {
+        const up = phone.replace(/\D/g,'').slice(-10);
+        const found = data.orders.some(o =>
+          String(o['Телефон']||'').replace(/\D/g,'').slice(-10) === up
+        );
+        if (found) localStorage.setItem('rf_returning','1');
+      }
+    } catch(e) {}
+    if (btn) { btn.disabled = false; btn.textContent = 'Продолжить →'; }
+  }
+
   document.getElementById('regOverlay').classList.add('hidden');
   initApp(user);
 }
 function isReturningUser() {
   try {
+    if (localStorage.getItem('rf_returning') === '1') return true;
     const user = JSON.parse(localStorage.getItem('rf_user')||'null');
     if (!user) return false;
     const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
