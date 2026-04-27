@@ -4,7 +4,7 @@
  * Обрабатывает pre_checkout_query и successful_payment
  *
  * Зарегистрировать вебхук (выполнить один раз в браузере):
- * https://api.telegram.org/bot8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8/setWebhook?url=https://reformaeat.ru/bot-webhook.php
+ * https://api.telegram.org/bot{TG_TOKEN}/setWebhook?url=https://reformaeat.ru/bot-webhook.php
  */
 require_once __DIR__ . '/payment-config.php';
 
