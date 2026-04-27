@@ -1,4 +1,4 @@
-const CACHE = 'reforma-v2';
+const CACHE = 'reforma-v3';
 const STATIC = [
   './reforma_clean%20(4).html',
   './manifest.json',
@@ -23,21 +23,35 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Google Sheets CSV — network first, fallback to cache
+  // Google Sheets CSV — cache-first, update in background (stale-while-revalidate)
   if (url.hostname === 'docs.google.com') {
     e.respondWith(
-      fetch(e.request).then(r => {
-        const clone = r.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return r;
-      }).catch(() => caches.match(e.request))
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request).then(r => {
+            if (r && r.status === 200) cache.put(e.request, r.clone());
+            return r;
+          }).catch(() => null);
+          return cached || networkFetch;
+        })
+      )
     );
     return;
   }
 
-  // Google Drive photos — network first, no cache (dynamic)
+  // Google Drive photos — cache-first
   if (url.hostname === 'drive.google.com' || url.hostname === 'lh3.googleusercontent.com') {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(r => {
+            if (r && r.status === 200) cache.put(e.request, r.clone());
+            return r;
+          }).catch(() => cached);
+        })
+      )
+    );
     return;
   }
 
