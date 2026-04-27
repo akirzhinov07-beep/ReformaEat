@@ -125,6 +125,19 @@
   .danger-btn { padding: 8px 18px; background: none; border: 1.5px solid #e88; border-radius: 8px; color: #c44; font-size: 13px; cursor: pointer; transition: all .2s; margin-right: 10px; }
   .danger-btn:hover { background: #fee; }
 
+  .settings-card { background: #fff; border-radius: 14px; padding: 28px 28px 24px; box-shadow: 0 2px 12px rgba(0,0,0,.06); max-width: 560px; }
+  .settings-card p { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+  .settings-card label { display: block; font-size: 11px; color: #aaa; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .settings-card input[type=url] { width: 100%; padding: 10px 14px; border: 1.5px solid #e0ddd8; border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; background: #faf9f7; }
+  .settings-card input[type=url]:focus { border-color: #ce5b40; }
+  .save-btn { margin-top: 14px; padding: 10px 24px; background: #ce5b40; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .save-btn:hover { background: #b84e36; }
+  .source-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 10px; vertical-align: middle; }
+  .source-cloud { background: #e6f4ea; color: #2e7d32; }
+  .source-local { background: #fff3e0; color: #e65100; }
+  .refresh-btn { padding: 5px 14px; background: none; border: 1.5px solid #e0ddd8; border-radius: 8px; font-size: 12px; color: #888; cursor: pointer; transition: all .2s; margin-left: 10px; vertical-align: middle; }
+  .refresh-btn:hover { border-color: #ce5b40; color: #ce5b40; }
+
   @media (max-width: 600px) {
     .content { padding: 16px 12px; }
     .stat-card { min-width: 130px; padding: 16px 18px; }
@@ -185,11 +198,16 @@
       <button class="tab-btn active" onclick="showTab('orders')">Заказы</button>
       <button class="tab-btn" onclick="showTab('clients')">Клиенты</button>
       <button class="tab-btn" onclick="showTab('training')">Статистика тренировок</button>
+      <button class="tab-btn" onclick="showTab('settings')">Настройки</button>
     </div>
 
     <!-- ORDERS -->
     <div id="tab-orders" class="section active">
-      <div class="section-title">История заказов</div>
+      <div class="section-title">
+        История заказов
+        <span id="orders-source-badge" class="source-badge" style="display:none"></span>
+        <button class="refresh-btn" id="refresh-btn" style="display:none" onclick="loadData()">↻ Обновить</button>
+      </div>
       <div class="table-wrap">
         <table id="orders-table">
           <thead><tr>
@@ -252,6 +270,18 @@
       </div>
     </div>
 
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="section">
+      <div class="section-title">Облачная база заказов</div>
+      <div class="settings-card">
+        <p>Вставьте URL развёртывания из Google Apps Script (<code>apps-script-orders.gs</code>). После сохранения заказы будут загружаться из Google Таблицы вместо localStorage — данные станут общими для всех устройств.</p>
+        <label for="script-url-input">URL Apps Script (Веб-приложение)</label>
+        <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+        <button class="save-btn" onclick="saveScriptUrl()">Сохранить</button>
+        <div id="script-url-status" style="margin-top:10px;font-size:13px;color:#888;min-height:18px"></div>
+      </div>
+    </div>
+
     <!-- DANGER ZONE -->
     <div class="danger-zone">
       <h3>Управление данными</h3>
@@ -264,6 +294,9 @@
 <script>
 const CREDS = { login: 'reforma2025', pass: 'reforma2025' };
 const SESSION_KEY = 'rf_admin_session';
+const SCRIPT_URL_KEY = 'rf_apps_script_url';
+const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
+let appsScriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || '';
 
 const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
@@ -312,8 +345,76 @@ function showDashboard() {
   loadData();
 }
 
-function loadData() {
-  const orders = JSON.parse(localStorage.getItem('rf_orders') || '[]');
+function normalizeCloudOrder(obj) {
+  return {
+    id:           obj['ID'],
+    date:         obj['Дата заказа'],
+    name:         obj['Имя'],
+    phone:        obj['Телефон'],
+    deliveryDate: obj['Дата доставки'],
+    plan:         obj['План'],
+    promo:        obj['Промокод'],
+    dishesStr:    obj['Блюда'],
+    comment:      obj['Комментарий'],
+    _cloud:       true
+  };
+}
+
+async function fetchCloudOrders() {
+  try {
+    const res = await fetch(appsScriptUrl + '?token=' + APPS_SCRIPT_TOKEN);
+    const data = await res.json();
+    if (data.ok) return data.orders.map(normalizeCloudOrder);
+  } catch {}
+  return null;
+}
+
+function renderDishCell(o, uid) {
+  if (o.dishesStr) {
+    const lines = esc(o.dishesStr).replace(/ \| /g, '<br>').replace(/, /g, '<br>');
+    return `<span class="dishes-toggle" onclick="toggleDishes('${uid}')">Состав</span>
+            <div class="dishes-list" id="${uid}">${lines}</div>`;
+  }
+  const dishes = Array.isArray(o.dishes) ? o.dishes : [];
+  if (dishes.length === 0) return '<span style="color:#ddd">—</span>';
+  const names = dishes.map(d => (d.name || d) + (d.kcal ? ' (' + d.kcal + ' ккал)' : '')).join('\n');
+  return `<span class="dishes-toggle" onclick="toggleDishes('${uid}')">${dishes.length} блюд</span>
+          <div class="dishes-list" id="${uid}">${esc(names).replace(/\n/g,'<br>')}</div>`;
+}
+
+function setSourceBadge(isCloud, failed) {
+  const badge = document.getElementById('orders-source-badge');
+  const btn   = document.getElementById('refresh-btn');
+  if (!appsScriptUrl) { badge.style.display = 'none'; btn.style.display = 'none'; return; }
+  badge.style.display = '';
+  btn.style.display   = '';
+  if (failed) {
+    badge.className   = 'source-badge source-local';
+    badge.textContent = 'localStorage (облако недоступно)';
+  } else {
+    badge.className   = 'source-badge source-cloud';
+    badge.textContent = 'Google Sheets';
+  }
+}
+
+async function loadData() {
+  let orders = [];
+  let cloudFailed = false;
+
+  if (appsScriptUrl) {
+    const cloud = await fetchCloudOrders();
+    if (cloud !== null) {
+      orders = cloud;
+    } else {
+      cloudFailed = true;
+      orders = JSON.parse(localStorage.getItem('rf_orders') || '[]');
+    }
+  } else {
+    orders = JSON.parse(localStorage.getItem('rf_orders') || '[]');
+  }
+
+  setSourceBadge(appsScriptUrl && !cloudFailed, cloudFailed);
+
   const trainClicks = JSON.parse(localStorage.getItem('rf_training_clicks') || '[]');
 
   // Stats
@@ -338,8 +439,6 @@ function loadData() {
     document.getElementById('orders-empty').style.display = 'none';
     const sorted = [...orders].sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
     sorted.forEach((o, i) => {
-      const dishes = Array.isArray(o.dishes) ? o.dishes : [];
-      const dishNames = dishes.map(d => (d.name || d) + (d.kcal ? ' (' + d.kcal + ' ккал)' : '')).join('\n');
       const uid = 'dish-' + i;
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -350,12 +449,7 @@ function loadData() {
         <td style="white-space:nowrap">${esc(o.deliveryDate||'—')}</td>
         <td><span class="badge badge-plan">${esc(o.plan||'—')}</span></td>
         <td>${o.promo ? '<span class="badge badge-promo">'+esc(o.promo)+'</span>' : '<span style="color:#ddd">—</span>'}</td>
-        <td>
-          ${dishes.length > 0
-            ? `<span class="dishes-toggle" onclick="toggleDishes('${uid}')">${dishes.length} блюд</span>
-               <div class="dishes-list" id="${uid}">${esc(dishNames).replace(/\n/g,'<br>')}</div>`
-            : '<span style="color:#ddd">—</span>'}
-        </td>`;
+        <td>${renderDishCell(o, uid)}</td>`;
       tbody.appendChild(tr);
     });
   }
@@ -445,11 +539,25 @@ function toggleDishes(id) {
   el.classList.toggle('open');
 }
 
+function saveScriptUrl() {
+  const val = document.getElementById('script-url-input').value.trim();
+  appsScriptUrl = val;
+  if (val) localStorage.setItem(SCRIPT_URL_KEY, val);
+  else localStorage.removeItem(SCRIPT_URL_KEY);
+  const status = document.getElementById('script-url-status');
+  status.textContent = val ? 'Сохранено. Загружаю данные…' : 'URL удалён. Используется localStorage.';
+  loadData();
+}
+
 function showTab(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   event.target.classList.add('active');
+  if (name === 'settings') {
+    document.getElementById('script-url-input').value = appsScriptUrl;
+    document.getElementById('script-url-status').textContent = '';
+  }
 }
 
 function clearOrders() {

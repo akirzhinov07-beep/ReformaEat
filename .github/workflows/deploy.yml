@@ -1,0 +1,31 @@
+name: Deploy to Sprinthost
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /domains/reformaeat.ru/public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            reforma_clean*
+            reforma_menu*
+            CNAME
+            .nojekyll
+            *.md
