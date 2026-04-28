@@ -1707,15 +1707,35 @@ function parseCsvMenu(csvText) {
 let MENU = {breakfast:[],lunch:[],snack:[],dinner:[],booster:[]};
 
 const MENU_CACHE_KEY = 'rf_menu_cache_v2';
-const MENU_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 часа
 
-function showModeSelector() {
+function getNextNoonMskMs() {
+  const msk = getMoscowNow();
+  const noon = new Date(msk);
+  noon.setHours(12, 0, 0, 0);
+  if (msk >= noon) noon.setDate(noon.getDate() + 1);
+  return Date.now() + (noon.getTime() - msk.getTime());
+}
+
+async function showModeSelector() {
   const user = JSON.parse(localStorage.getItem('rf_user')||'null');
   if (!user) {
     document.getElementById('regOverlay').classList.remove('hidden');
-  } else {
-    initApp(user);
+    return;
   }
+  if (!isReturningUser() && APPS_SCRIPT_URL) {
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL + '?token=' + APPS_SCRIPT_TOKEN);
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.orders)) {
+        const up = user.phone.replace(/\D/g,'').slice(-10);
+        const found = data.orders.some(o =>
+          String(o['Телефон']||'').replace(/\D/g,'').slice(-10) === up
+        );
+        if (found) localStorage.setItem('rf_returning','1');
+      }
+    } catch(e) {}
+  }
+  initApp(user);
 }
 
 async function loadMenuFromSheet() {
@@ -1723,7 +1743,7 @@ async function loadMenuFromSheet() {
 
   try {
     const cached = JSON.parse(localStorage.getItem(MENU_CACHE_KEY) || 'null');
-    if (cached && cached.menu && (Date.now() - cached.ts) < MENU_CACHE_TTL) {
+    if (cached && cached.menu && Date.now() < (cached.expiresAt || 0)) {
       MENU = cached.menu;
       if (loader) loader.style.display = 'none';
       showModeSelector();
@@ -1750,7 +1770,7 @@ async function fetchAndCacheMenu() {
     const parsed = parseCsvMenu(text);
     if (parsed) {
       MENU = parsed;
-      localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ts: Date.now(), menu: parsed}));
+      localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ts: Date.now(), expiresAt: getNextNoonMskMs(), menu: parsed}));
     } else { throw new Error('пустой CSV'); }
   } catch(e) {
     console.warn('reForma: не удалось загрузить меню из таблицы.', e);
