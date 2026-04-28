@@ -62,6 +62,7 @@ body{
   background:var(--bg);
   color:var(--ink);
   min-height:100vh;
+  overflow-x:hidden;
 }
 /* ── NAV ── */
 nav{
@@ -1066,12 +1067,15 @@ nav{
   .week-meal-col{
     border-left:none;
     border-top:1px solid var(--line);
+    padding:6px;
   }
   .week-meal-col:nth-child(2n){border-left:1px solid var(--line)}
   .week-meal-col:nth-child(1),.week-meal-col:nth-child(2){border-top:none}
+  .w7-dish{padding:4px 6px}
   .w7-dish-name{-webkit-line-clamp:2;font-size:11px}
   .w7-dish-kcal{font-size:10px}
-  .week-days-wrap{margin:0 12px}
+  .week-days-wrap{margin:0 8px}
+  .week-days-cards{overflow:hidden}
 }
 .week-progress{
   margin:10px 24px 0;padding:10px 16px;
