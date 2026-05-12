@@ -2094,21 +2094,10 @@ function tryOrder() {
     saveOrderToCloud({...order, mode:'1day'});
     /* ── TELEGRAM NOTIFICATION ── */
     try{
-      const TG_TOKEN='8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8';
-      const TG_CHAT='936026927';
-      const dishLines=Object.entries(order.dishes).map(([k,v])=>'  • '+k+': '+v).join('\n');
-      const msg='🍽 *Новый заказ reForma*\n\n'
-        +'👤 Имя: '+order.name+'\n'
-        +'📞 Телефон: '+order.phone+'\n'
-        +'📅 Дата доставки: '+(order.deliveryDate||'не указана')+'\n'
-        +'🥗 План: '+order.plan+'\n'
-        +(order.comment?'💬 Комментарий: '+order.comment+'\n':'')
-        +(order.promo?'🎟 Промокод: '+order.promo+(order.discount?' (скидка '+order.discount+' ₽)':'')+'\n':'')
-        +'\n*Блюда:*\n'+dishLines;
-      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+      fetch('/notify-order.php',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'Markdown'})
+        body:JSON.stringify({...order, mode:'1day'})
       }).catch(function(){});
     }catch(e){}
   })();
@@ -2481,21 +2470,10 @@ function tryOrder7() {
     } catch(e) {}
     saveOrderToCloud({...order, mode:'7day'});
     try {
-      const TG_TOKEN='8655843816:AAEDQ5M57MeC6wRq5Y8qy8_LNdsu7HK_0q8';
-      const TG_CHAT='936026927';
-      let msg = '🗓 *Заказ на 7 дней — reForma*\n\n'
-        + '👤 ' + order.name + '\n📞 ' + order.phone + '\n'
-        + '🥗 План: ' + order.plan + '\n💰 Сумма: ' + order.totalPrice.toLocaleString('ru') + ' ₽\n'
-        + (order.promo ? '🎟 Промокод: ' + order.promo + (order.discount ? ' (−' + order.discount + ' ₽)' : '') + '\n' : '')
-        + (order.comment ? '💬 ' + order.comment + '\n' : '')
-        + '📍 ' + order.city + ', ' + order.street + ', ' + order.house + '\n\n';
-      weekDays.forEach(wd => {
-        msg += `📅 ${wd.date}:\n`;
-        Object.entries(wd.dishes).forEach(([k,v]) => { msg += `  • ${k}: ${v}\n`; });
-      });
-      fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'Markdown'})
+      fetch('/notify-order.php',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...order, mode:'7day', days: weekDays})
       }).catch(()=>{});
     } catch(e) {}
   })();
