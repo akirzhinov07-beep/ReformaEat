@@ -1711,26 +1711,34 @@ function getNextNoonMskMs() {
   return Date.now() + (noon.getTime() - msk.getTime());
 }
 
-async function showModeSelector() {
+function showModeSelector() {
   const user = JSON.parse(localStorage.getItem('rf_user')||'null');
   if (!user) {
     document.getElementById('regOverlay').classList.remove('hidden');
     return;
   }
-  if (!isReturningUser() && APPS_SCRIPT_URL) {
-    try {
-      const res  = await fetch(APPS_SCRIPT_URL + '?token=' + APPS_SCRIPT_TOKEN);
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.orders)) {
-        const up = user.phone.replace(/\D/g,'').slice(-10);
-        const found = data.orders.some(o =>
-          String(o['Телефон']||'').replace(/\D/g,'').slice(-10) === up
-        );
-        if (found) localStorage.setItem('rf_returning','1');
-      }
-    } catch(e) {}
-  }
+  // Показываем UI сразу по локальному состоянию
   initApp(user);
+  // Облачная проверка в фоне (не блокирует загрузку)
+  if (!isReturningUser() && APPS_SCRIPT_URL) {
+    fetch(APPS_SCRIPT_URL + '?token=' + APPS_SCRIPT_TOKEN)
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && Array.isArray(data.orders)) {
+          const up = user.phone.replace(/\D/g,'').slice(-10);
+          const found = data.orders.some(o =>
+            String(o['Телефон']||'').replace(/\D/g,'').slice(-10) === up
+          );
+          if (found) {
+            localStorage.setItem('rf_returning','1');
+            // Если mode selector ещё виден — переключаем на 7 дней
+            const ms = document.getElementById('modeSelector');
+            if (ms && ms.style.display !== 'none') initApp(user);
+          }
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 async function loadMenuFromSheet() {
