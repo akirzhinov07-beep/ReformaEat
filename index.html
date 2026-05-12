@@ -1979,7 +1979,7 @@ function getMoscowNow() {
 }
 function getAutoDeliveryDate() {
   const msk = getMoscowNow();
-  const days = msk.getHours() < 12 ? 0 : 2;
+  const days = msk.getHours() < 12 ? 0 : 1;
   const d = new Date(msk);
   d.setDate(d.getDate() + days);
   return d;
@@ -2003,7 +2003,7 @@ function renderDeliveryDate() {
     notice.innerHTML = '⏰ Сейчас <b>до 12:00 по Москве</b> — доставим <b>сегодня</b>';
     badge.style.background = 'var(--blue,#3a7bfd)';
   } else {
-    notice.innerHTML = '⏰ Сейчас <b>после 12:00 по Москве</b> — доставим <b>послезавтра</b>';
+    notice.innerHTML = '⏰ Сейчас <b>после 12:00 по Москве</b> — доставим <b>завтра</b>';
     badge.style.background = 'var(--ink3,#888)';
   }
   badge.textContent = '📅 ' + dateStr;
@@ -2194,7 +2194,7 @@ const MONTHS_SHORT_RU = ['янв','фев','мар','апр','май','июн','
 
 function get7DayDates() {
   const msk = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
-  const daysToAdd = msk.getHours() < 12 ? 1 : 2;
+  const daysToAdd = msk.getHours() < 12 ? 0 : 1;
   return Array.from({length:7}, (_,i) => {
     const d = new Date(msk);
     d.setDate(d.getDate() + daysToAdd + i);
