@@ -2012,16 +2012,28 @@ function renderDeliveryDate() {
 const PROMO_CODES = {
   'REFORMA2026': {discount: 1490, label: 'скидка 1 490 ₽'},
   'REFORMA2025': {discount: 200,  label: 'скидка 200 ₽'},
+  'PROMO95':     {percent: 95, mode: '7day', label: 'скидка 95% на рацион 7 дней'},
 };
+
+function applyPromoDiscount(promoData, totalPrice) {
+  if (!promoData) return 0;
+  if (promoData.percent) return Math.round(totalPrice * promoData.percent / 100);
+  return promoData.discount || 0;
+}
 
 function checkPromo() {
   const val = document.getElementById('fPromo').value.trim().toUpperCase();
   const hint = document.getElementById('promoHint');
   if (!val) { hint.textContent=''; hint.style.color=''; return null; }
-  if (PROMO_CODES[val]) {
-    hint.textContent = '✓ Промокод принят: ' + PROMO_CODES[val].label;
+  const p = PROMO_CODES[val];
+  if (p && !p.mode) {
+    hint.textContent = '✓ Промокод принят: ' + p.label;
     hint.style.color = '#2e7d32';
-    return PROMO_CODES[val];
+    return p;
+  } else if (p && p.mode) {
+    hint.textContent = '✗ Этот промокод только для заказа на 7 дней';
+    hint.style.color = '#ce5b40';
+    return null;
   } else {
     hint.textContent = '✗ Промокод не найден';
     hint.style.color = '#ce5b40';
@@ -2362,10 +2374,11 @@ function checkPromo7() {
   const val = document.getElementById('w7-fPromo').value.trim().toUpperCase();
   const hint = document.getElementById('w7-promoHint');
   if (!val) { hint.textContent=''; return null; }
-  if (PROMO_CODES[val]) {
-    hint.textContent = '✓ Промокод принят: ' + PROMO_CODES[val].label;
+  const p = PROMO_CODES[val];
+  if (p && (!p.mode || p.mode === '7day')) {
+    hint.textContent = '✓ Промокод принят: ' + p.label;
     hint.style.color = '#2e7d32';
-    return PROMO_CODES[val];
+    return p;
   } else {
     hint.textContent = '✗ Промокод не найден';
     hint.style.color = '#ce5b40';
@@ -2427,7 +2440,8 @@ function tryOrder7() {
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
   const comment = document.getElementById('w7-fComment').value.trim();
   const totalPrice = PLAN_PRICE[plan7] * 7;
-  const finalPrice = promoData ? Math.max(0, totalPrice - promoData.discount) : totalPrice;
+  const discountAmt7 = applyPromoDiscount(promoData, totalPrice);
+  const finalPrice = Math.max(0, totalPrice - discountAmt7);
 
   let lines = `<strong>${name}</strong> · +7 ${document.getElementById('w7-fPhone').value}<br>`;
   lines += `Рацион на 7 дней: <strong>${finalPrice.toLocaleString('ru')} ₽</strong>`;
@@ -2463,7 +2477,7 @@ function tryOrder7() {
       id: Date.now(), date: new Date().toISOString(),
       mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
       plan: plan7 === '2000' ? 'С бустером' : 'Базовый',
-      totalPrice: finalPrice, promo, discount: promoData ? promoData.discount : 0,
+      totalPrice: finalPrice, promo, discount: discountAmt7,
       comment, city: document.getElementById('w7-fCity').value.trim(),
       street: document.getElementById('w7-fStreet').value.trim(),
       house: document.getElementById('w7-fHouse').value.trim(),
