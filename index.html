@@ -2016,12 +2016,20 @@ const PROMO_CODES = {
   'REFORMA2026': {discount: 1490, label: 'скидка 1 490 ₽'},
   'REFORMA2025': {discount: 200,  label: 'скидка 200 ₽'},
   'PROMO95':     {percent: 95, mode: '7day', label: 'скидка 95% на рацион 7 дней'},
+  'REFORMA10':   {finalPrice: 10, label: 'тестовый заказ за 10 ₽'},
 };
 
 function applyPromoDiscount(promoData, totalPrice) {
   if (!promoData) return 0;
+  if (promoData.finalPrice !== undefined) return Math.max(0, totalPrice - promoData.finalPrice);
   if (promoData.percent) return Math.round(totalPrice * promoData.percent / 100);
   return promoData.discount || 0;
+}
+
+function getNextOrderId() {
+  const counter = parseInt(localStorage.getItem('rf_order_counter') || '0', 10) + 1;
+  localStorage.setItem('rf_order_counter', String(counter));
+  return String(counter).padStart(3, '0');
 }
 
 function checkPromo() {
@@ -2077,7 +2085,7 @@ function tryOrder() {
     if(d) lines+=`${labels[t]}: ${d.name}<br>`;
   });
   const amount1day = plan==='2000' ? 1620 : 1490;
-  const discountAmt = promoData ? promoData.discount : 0;
+  const discountAmt = applyPromoDiscount(promoData, amount1day);
   const totalAmt = Math.max(0, amount1day - discountAmt);
   document.getElementById('modalSummary').innerHTML=lines;
   document.getElementById('modalPrice').textContent = totalAmt.toLocaleString('ru') + ' ₽';
@@ -2095,7 +2103,7 @@ function tryOrder() {
       if(d) dishes[labels2[t]]=d.name;
     });
     const order={
-      id: Date.now(),
+      id: getNextOrderId(),
       date: new Date().toISOString(),
       name: document.getElementById('fName').value.trim(),
       phone: '+7 '+document.getElementById('fPhone').value,
@@ -2476,7 +2484,7 @@ function tryOrder7() {
       return {date: date.toISOString().slice(0,10), dishes: day};
     });
     const order = {
-      id: Date.now(), date: new Date().toISOString(),
+      id: getNextOrderId(), date: new Date().toISOString(),
       mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
       plan: plan7 === '2000' ? 'С бустером' : 'Базовый',
       totalPrice: finalPrice, promo, discount: discountAmt7,
