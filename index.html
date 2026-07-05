@@ -2459,10 +2459,9 @@ function tryOrder7() {
       if (d) lines += `&nbsp;&nbsp;${mealLabels[t]}: ${d.name}<br>`;
     });
   });
-  const total7 = _pendingPaymentAmount || 0;
   document.getElementById('modalSummary').innerHTML = lines;
-  document.getElementById('modalPrice').textContent = total7.toLocaleString('ru') + ' ₽';
-  document.getElementById('modalPayBtn').textContent = 'Оплатить ' + total7.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPrice').textContent = finalPrice.toLocaleString('ru') + ' ₽';
+  document.getElementById('modalPayBtn').textContent = 'Оплатить ' + finalPrice.toLocaleString('ru') + ' ₽';
   document.getElementById('modalPayLoading').textContent = '';
   document.getElementById('modalPayBtn').disabled = false;
   document.getElementById('overlay').classList.add('show');
