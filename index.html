@@ -1614,13 +1614,15 @@ function closeSuccess() {
 })();
 
 function saveOrderToCloud(order) {
-  if (!APPS_SCRIPT_URL) return;
-  fetch(APPS_SCRIPT_URL, {
+  if (!APPS_SCRIPT_URL) return Promise.resolve(null);
+  return fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(order)
-  }).catch(function(){});
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { return data.ok ? data.orderNum : null; })
+  .catch(function() { return null; });
 }
 
 /* ── РЕЗЕРВНЫЕ ДАННЫЕ (если таблица не настроена или нет сети) ── */
@@ -2026,11 +2028,6 @@ function applyPromoDiscount(promoData, totalPrice) {
   return promoData.discount || 0;
 }
 
-function getNextOrderId() {
-  const counter = parseInt(localStorage.getItem('rf_order_counter') || '0', 10) + 1;
-  localStorage.setItem('rf_order_counter', String(counter));
-  return String(counter).padStart(3, '0');
-}
 
 function checkPromo() {
   const val = document.getElementById('fPromo').value.trim().toUpperCase();
@@ -2103,7 +2100,7 @@ function tryOrder() {
       if(d) dishes[labels2[t]]=d.name;
     });
     const order={
-      id: getNextOrderId(),
+      id: 'tmp-' + Date.now(),
       date: new Date().toISOString(),
       name: document.getElementById('fName').value.trim(),
       phone: '+7 '+document.getElementById('fPhone').value,
@@ -2122,15 +2119,14 @@ function tryOrder() {
       localStorage.setItem('rf_orders',JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     }catch(e){}
-    saveOrderToCloud({...order, mode:'1day'});
-    /* ── TELEGRAM NOTIFICATION ── */
-    try{
+    saveOrderToCloud({...order, mode:'1day'}).then(function(orderNum) {
+      const finalOrder = orderNum ? {...order, id: orderNum} : order;
       fetch('/notify-order.php',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({...order, mode:'1day'})
+        body:JSON.stringify({...finalOrder, mode:'1day'})
       }).catch(function(){});
-    }catch(e){}
+    });
   })();
 }
 function closeModal() {
@@ -2484,7 +2480,7 @@ function tryOrder7() {
       return {date: date.toISOString().slice(0,10), dishes: day};
     });
     const order = {
-      id: getNextOrderId(), date: new Date().toISOString(),
+      id: 'tmp-' + Date.now(), date: new Date().toISOString(),
       mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
       plan: plan7 === '2000' ? 'С бустером' : 'Базовый',
       totalPrice: finalPrice, promo, discount: discountAmt7,
@@ -2500,14 +2496,14 @@ function tryOrder7() {
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
-    saveOrderToCloud({...order, mode:'7day'});
-    try {
+    saveOrderToCloud({...order, mode:'7day'}).then(function(orderNum) {
+      const finalOrder = orderNum ? {...order, id: orderNum} : order;
       fetch('/notify-order.php',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({...order, mode:'7day', days: weekDays})
-      }).catch(()=>{});
-    } catch(e) {}
+        body: JSON.stringify({...finalOrder, mode:'7day', days: weekDays})
+      }).catch(function(){});
+    });
   })();
 }
 

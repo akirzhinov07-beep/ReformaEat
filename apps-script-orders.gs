@@ -16,7 +16,27 @@
  */
 
 const ORDERS_SHEET  = 'Заказы';
+const COUNTER_SHEET = 'Счётчик';
 const ADMIN_TOKEN   = 'rf_admin_2025_secret';
+
+// ─── АТОМАРНЫЙ СЧЁТЧИК ЗАКАЗОВ ────────────────────────────────────────────
+function getNextOrderNum() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(COUNTER_SHEET);
+    if (!sheet) {
+      sheet = ss.insertSheet(COUNTER_SHEET);
+      sheet.getRange(1, 1).setValue(0);
+    }
+    const next = (sheet.getRange(1, 1).getValue() || 0) + 1;
+    sheet.getRange(1, 1).setValue(next);
+    return String(next).padStart(3, '0');
+  } finally {
+    lock.releaseLock();
+  }
+}
 
 // ─── ПРИЁМ ЗАКАЗА (POST) ──────────────────────────────────────────────────
 function doPost(e) {
@@ -28,13 +48,15 @@ function doPost(e) {
     // Создать лист «Заказы» при первом заказе
     if (!sheet) {
       sheet = ss.insertSheet(ORDERS_SHEET);
-      const hdr = ['ID','Дата заказа','Режим','Имя','Телефон',
+      const hdr = ['№','Дата заказа','Режим','Имя','Телефон',
                    'Дата доставки','План','Город','Улица','Дом','Кв',
                    'Промокод','Скидка ₽','Сумма ₽','Блюда','Комментарий'];
       sheet.appendRow(hdr);
       sheet.setFrozenRows(1);
       sheet.getRange(1,1,1,hdr.length).setFontWeight('bold').setBackground('#f5f3ef');
     }
+
+    const orderNum = getNextOrderNum();
 
     // Сформировать строку блюд
     const mode = data.mode || '1day';
@@ -48,7 +70,7 @@ function doPost(e) {
     }
 
     sheet.appendRow([
-      data.id          || Date.now(),
+      orderNum,
       data.date        || new Date().toISOString(),
       mode === '7day'  ? '7 дней' : '1 день',
       data.name        || '',
@@ -66,7 +88,7 @@ function doPost(e) {
       data.comment     || ''
     ]);
 
-    return respond({ ok: true });
+    return respond({ ok: true, orderNum: orderNum });
   } catch (err) {
     return respond({ ok: false, error: err.toString() });
   }
