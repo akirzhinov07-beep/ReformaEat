@@ -88,6 +88,9 @@ function doPost(e) {
       data.comment     || ''
     ]);
 
+    // Prevent +7... phone from being parsed as a formula by Sheets
+    sheet.getRange(sheet.getLastRow(), 5).setNumberFormat('@');
+
     return respond({ ok: true, orderNum: orderNum });
   } catch (err) {
     return respond({ ok: false, error: err.toString() });
