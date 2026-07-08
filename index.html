@@ -1614,15 +1614,13 @@ function closeSuccess() {
 })();
 
 function saveOrderToCloud(order) {
-  if (!APPS_SCRIPT_URL) return Promise.resolve(null);
-  return fetch(APPS_SCRIPT_URL, {
+  if (!APPS_SCRIPT_URL) return;
+  fetch(APPS_SCRIPT_URL, {
     method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(order)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { return data.ok ? data.orderNum : null; })
-  .catch(function() { return null; });
+  }).catch(function(){});
 }
 
 /* ── РЕЗЕРВНЫЕ ДАННЫЕ (если таблица не настроена или нет сети) ── */
