@@ -5,7 +5,9 @@
  * Body: JSON с данными заказа
  */
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: https://reformaeat.ru');
+$allowed_origins = ['https://reformaeat.ru', 'https://akirzhinov07-beep.github.io'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+header('Access-Control-Allow-Origin: ' . (in_array($origin, $allowed_origins) ? $origin : 'https://reformaeat.ru'));
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 

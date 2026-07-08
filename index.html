@@ -2119,14 +2119,12 @@ function tryOrder() {
       localStorage.setItem('rf_orders',JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     }catch(e){}
-    saveOrderToCloud({...order, mode:'1day'}).then(function(orderNum) {
-      const finalOrder = orderNum ? {...order, id: orderNum} : order;
-      fetch('/notify-order.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({...finalOrder, mode:'1day'})
-      }).catch(function(){});
-    });
+    fetch('https://reformaeat.ru/notify-order.php',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...order, mode:'1day'})
+    }).catch(function(){});
+    saveOrderToCloud({...order, mode:'1day'});
   })();
 }
 function closeModal() {
@@ -2496,14 +2494,12 @@ function tryOrder7() {
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
-    saveOrderToCloud({...order, mode:'7day'}).then(function(orderNum) {
-      const finalOrder = orderNum ? {...order, id: orderNum} : order;
-      fetch('/notify-order.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({...finalOrder, mode:'7day', days: weekDays})
-      }).catch(function(){});
-    });
+    fetch('https://reformaeat.ru/notify-order.php',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({...order, mode:'7day', days: weekDays})
+    }).catch(function(){});
+    saveOrderToCloud({...order, mode:'7day'});
   })();
 }
 
