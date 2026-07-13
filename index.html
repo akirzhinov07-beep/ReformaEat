@@ -1197,7 +1197,7 @@ nav{
       <button class="plan-opt on" id="popt1600" onclick="selectPlan('1600')">
         <div>
           <div class="plan-opt-name">Базовый рацион</div>
-          <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус</div>
+          <div class="plan-opt-sub">Завтрак · Обед · Ужин</div>
           <div class="plan-opt-kcal-badge">До 1500 ккал</div>
         </div>
         <div class="plan-opt-price">1 490 ₽</div>
@@ -1205,7 +1205,7 @@ nav{
       <button class="plan-opt boost" id="popt2000" onclick="selectPlan('2000')">
         <div>
           <div class="plan-opt-name">С белковым бустером</div>
-          <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус · Бустер</div>
+          <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
           <div class="plan-opt-kcal-badge">1500+ ккал</div>
         </div>
         <div class="plan-opt-price">1 620 ₽</div>
@@ -1226,14 +1226,6 @@ nav{
         <span class="meal-range">480–550 ккал</span>
       </div>
       <div class="dish-list" id="list-lunch"></div>
-    </div>
-    <div class="meal-block" data-meal="snack">
-      <div class="meal-title-row">
-        <div class="meal-dot"></div>
-        <span class="meal-title">Перекус</span>
-        <span class="meal-range">190–220 ккал</span>
-      </div>
-      <div class="dish-list" id="list-snack"></div>
     </div>
     <div class="meal-block" data-meal="dinner">
       <div class="meal-title-row">
@@ -1285,8 +1277,6 @@ nav{
         <div class="ol"><span class="ol-cat">Завтрак</span><span class="ol-val" id="ol-breakfast">не выбрано</span></div>
         <div class="ol-divider"></div>
         <div class="ol"><span class="ol-cat">Обед</span><span class="ol-val" id="ol-lunch">не выбрано</span></div>
-        <div class="ol-divider"></div>
-        <div class="ol"><span class="ol-cat">Перекус</span><span class="ol-val" id="ol-snack">не выбрано</span></div>
         <div class="ol-divider"></div>
         <div class="ol"><span class="ol-cat">Ужин</span><span class="ol-val" id="ol-dinner">не выбрано</span></div>
         <div class="ol-divider" id="boostDivider" style="display:none"></div>
@@ -1385,7 +1375,7 @@ nav{
     <button class="plan-opt on" id="wpopt1600" onclick="selectPlan7('1600')">
       <div>
         <div class="plan-opt-name">Базовый рацион</div>
-        <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус</div>
+        <div class="plan-opt-sub">Завтрак · Обед · Ужин</div>
         <div class="plan-opt-kcal-badge">До 1500 ккал</div>
       </div>
       <div class="plan-opt-price">1 490 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
@@ -1393,7 +1383,7 @@ nav{
     <button class="plan-opt boost" id="wpopt2000" onclick="selectPlan7('2000')">
       <div>
         <div class="plan-opt-name">С белковым бустером</div>
-        <div class="plan-opt-sub">Завтрак · Обед · Ужин · Перекус · Бустер</div>
+        <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
         <div class="plan-opt-kcal-badge">1500+ ккал</div>
       </div>
       <div class="plan-opt-price">1 620 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
@@ -1797,7 +1787,7 @@ const menuByDay = {
 };
 const todayDOW = new Date().getDay();
 const todayMenus = menuByDay[todayDOW];
-let sel  = {breakfast:null,lunch:null,snack:null,dinner:null,booster:null};
+let sel  = {breakfast:null,lunch:null,dinner:null,booster:null};
 let plan = '1600';
 const TARGET = {'1600':1600,'2000':2000};
 const CIRC   = 376; // 2π×60
@@ -1862,8 +1852,8 @@ function buildList(type) {
 /* ── CALC ── */
 function updateCalc() {
   const types = plan==='2000'
-    ?['breakfast','lunch','snack','dinner','booster']
-    :['breakfast','lunch','snack','dinner'];
+    ?['breakfast','lunch','dinner','booster']
+    :['breakfast','lunch','dinner'];
   let kcal=0,p=0,f=0,c=0,done=0;
   types.forEach(t => {
     const olEl = document.getElementById('ol-'+t);
@@ -1892,8 +1882,8 @@ function updateCalc() {
 }
 function updateOrderBtn() {
   const types=plan==='2000'
-    ?['breakfast','lunch','snack','dinner','booster']
-    :['breakfast','lunch','snack','dinner'];
+    ?['breakfast','lunch','dinner','booster']
+    :['breakfast','lunch','dinner'];
   const allDish=types.every(t=>sel[t]);
   const done=types.filter(t=>sel[t]).length;
   const rem=types.length-done;
@@ -1910,8 +1900,8 @@ function updateOrderBtn() {
 }
 function updateHint(allDish, done, rem) {
   const types=plan==='2000'
-    ?['breakfast','lunch','snack','dinner','booster']
-    :['breakfast','lunch','snack','dinner'];
+    ?['breakfast','lunch','dinner','booster']
+    :['breakfast','lunch','dinner'];
   const allDishDone = done===types.length;
   const name=document.getElementById('fName').value.trim();
   const phone=getPhone();
@@ -2060,8 +2050,8 @@ function tryOrder() {
   if(phone.length<10){document.getElementById('fPhone').classList.add('error');document.getElementById('fPhone').focus();return;}
   document.getElementById('fName').classList.remove('error');
   document.getElementById('fPhone').classList.remove('error');
-  const types=plan==='2000'?['breakfast','lunch','snack','dinner','booster']:['breakfast','lunch','snack','dinner'];
-  const labels={breakfast:'Завтрак',lunch:'Обед',snack:'Перекус',dinner:'Ужин',booster:'Бустер'};
+  const types=plan==='2000'?['breakfast','lunch','dinner','booster']:['breakfast','lunch','dinner'];
+  const labels={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
   let lines=`<strong>${name}</strong> · +7 ${document.getElementById('fPhone').value}<br>`;
   const autoDeliveryDate = getAutoDeliveryDate();
   const autoDateStr = getDeliveryDateStr();
@@ -2090,8 +2080,8 @@ function tryOrder() {
   document.getElementById('overlay').classList.add('show');
   /* ── SAVE ORDER ── */
   (function(){
-    const types2=plan==='2000'?['breakfast','lunch','snack','dinner','booster']:['breakfast','lunch','snack','dinner'];
-    const labels2={breakfast:'Завтрак',lunch:'Обед',snack:'Перекус',dinner:'Ужин',booster:'Бустер'};
+    const types2=plan==='2000'?['breakfast','lunch','dinner','booster']:['breakfast','lunch','dinner'];
+    const labels2={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
     const dishes={};
     types2.forEach(t=>{
       const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
@@ -2128,13 +2118,13 @@ function tryOrder() {
 function closeModal() {
   document.getElementById('overlay').classList.remove('show');
   // Reset 1-day state
-  sel={breakfast:null,lunch:null,snack:null,dinner:null,booster:null};
+  sel={breakfast:null,lunch:null,dinner:null,booster:null};
   ['fName','fPhone','fComment','fPromo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   prefillUserData();
-  ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
+  ['breakfast','lunch','dinner','booster'].forEach(buildList);
   renderDeliveryDate();updateCalc();
   // Reset 7-day state
-  sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,snack:null,booster:null}));
+  sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,booster:null}));
   ['w7-fName','w7-fPhone','w7-fCity','w7-fStreet','w7-fHouse','w7-fApt','w7-fEntrance','w7-fComment','w7-fPromo'].forEach(id => {
     const el=document.getElementById(id); if(el) el.value='';
   });
@@ -2202,7 +2192,7 @@ function backToMode() {
    7-DAY MODE
    ══════════════════════════════════════════════════ */
 let plan7 = '1600';
-let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,snack:null,booster:null}));
+let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,booster:null}));
 const PLAN_PRICE = {'1600':1490, '2000':1620};
 const DAYS_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const MONTHS_SHORT_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
@@ -2232,9 +2222,9 @@ function selectPlan7(p) {
 function build7DayUI() {
   const dates = get7DayDates();
   const mealTypes = plan7 === '2000'
-    ? ['breakfast','lunch','dinner','snack','booster']
-    : ['breakfast','lunch','dinner','snack'];
-  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',snack:'Перекус',booster:'Бустер'};
+    ? ['breakfast','lunch','dinner','booster']
+    : ['breakfast','lunch','dinner'];
+  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
 
   const total = 7 * mealTypes.length;
   const tcEl = document.getElementById('week-total-count');
@@ -2313,8 +2303,8 @@ function pick7(dayIdx, mealType, dishId, colEl) {
   });
   // Update day done counter
   const mealTypes = plan7 === '2000'
-    ? ['breakfast','lunch','dinner','snack','booster']
-    : ['breakfast','lunch','dinner','snack'];
+    ? ['breakfast','lunch','dinner','booster']
+    : ['breakfast','lunch','dinner'];
   const doneCnt = mealTypes.filter(t => sel7[dayIdx][t]).length;
   const complete = doneCnt === mealTypes.length;
   const dayKcal = mealTypes.reduce((sum, t) => {
@@ -2336,8 +2326,8 @@ function pick7(dayIdx, mealType, dishId, colEl) {
 
 function get7Counts() {
   const types = plan7 === '2000'
-    ? ['breakfast','lunch','dinner','snack','booster']
-    : ['breakfast','lunch','dinner','snack'];
+    ? ['breakfast','lunch','dinner','booster']
+    : ['breakfast','lunch','dinner'];
   let selected = 0;
   const total = 7 * types.length;
   sel7.forEach(day => types.forEach(t => { if (day[t]) selected++; }));
@@ -2434,9 +2424,9 @@ function tryOrder7() {
 
   const dates = get7DayDates();
   const mealTypes = plan7 === '2000'
-    ? ['breakfast','lunch','dinner','snack','booster']
-    : ['breakfast','lunch','dinner','snack'];
-  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',snack:'Перекус',booster:'Бустер'};
+    ? ['breakfast','lunch','dinner','booster']
+    : ['breakfast','lunch','dinner'];
+  const mealLabels = {breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
   const dayShort = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 
   const promo = document.getElementById('w7-fPromo').value.trim();
@@ -2586,7 +2576,7 @@ function initApp(user) {
 }
 /* ── INIT ── */
 loadMenuFromSheet().then(() => {
-  ['breakfast','lunch','snack','dinner','booster'].forEach(buildList);
+  ['breakfast','lunch','dinner','booster'].forEach(buildList);
   updateCalc();
   renderDeliveryDate();
 });
