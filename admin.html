@@ -216,6 +216,7 @@
             <th>Имя</th>
             <th>Телефон</th>
             <th>Дата доставки</th>
+            <th>Адрес</th>
             <th>План</th>
             <th>Промокод</th>
             <th>Блюда</th>
@@ -346,14 +347,20 @@ function showDashboard() {
 }
 
 function normalizeCloudOrder(obj) {
+  const phone = obj['Телефон'];
   return {
-    id:           obj['ID'],
+    id:           obj['№'] || obj['ID'],
     date:         obj['Дата заказа'],
     name:         obj['Имя'],
-    phone:        obj['Телефон'],
+    phone:        (phone && typeof phone === 'object') ? '' : String(phone || ''),
     deliveryDate: obj['Дата доставки'],
-    plan:         obj['План'],
+    plan:         obj['Режим'] || obj['План'],
+    city:         obj['Город']  || '',
+    street:       obj['Улица']  || '',
+    house:        obj['Дом']    || '',
+    apt:          obj['Кв']     || '',
     promo:        obj['Промокод'],
+    totalPrice:   obj['Сумма ₽'],
     dishesStr:    obj['Блюда'],
     comment:      obj['Комментарий'],
     _cloud:       true
@@ -362,7 +369,7 @@ function normalizeCloudOrder(obj) {
 
 async function fetchCloudOrders() {
   try {
-    const res = await fetch(appsScriptUrl + '?token=' + APPS_SCRIPT_TOKEN);
+    const res = await fetch(appsScriptUrl + '?token=' + APPS_SCRIPT_TOKEN + '&_=' + Date.now());
     const data = await res.json();
     if (data.ok) return data.orders.map(normalizeCloudOrder);
   } catch {}
@@ -447,6 +454,7 @@ async function loadData() {
         <td><b>${esc(o.name||'—')}</b></td>
         <td style="white-space:nowrap">${esc(o.phone||'—')}</td>
         <td style="white-space:nowrap">${esc(o.deliveryDate||'—')}</td>
+        <td style="font-size:13px">${[o.city,o.street,o.house?'д.'+o.house:'',o.apt?'кв.'+o.apt:''].filter(Boolean).join(', ')||'<span style="color:#ddd">—</span>'}</td>
         <td><span class="badge badge-plan">${esc(o.plan||'—')}</span></td>
         <td>${o.promo ? '<span class="badge badge-promo">'+esc(o.promo)+'</span>' : '<span style="color:#ddd">—</span>'}</td>
         <td>${renderDishCell(o, uid)}</td>`;
