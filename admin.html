@@ -355,7 +355,7 @@ function normalizeCloudOrder(obj) {
     id:           obj['№'] || obj['ID'],
     date:         obj['Дата заказа'],
     name:         obj['Имя'],
-    phone:        (phone && typeof phone === 'object') ? '' : String(phone || ''),
+    phone:        (!phone || typeof phone === 'object' || String(phone).startsWith('#')) ? '' : String(phone),
     deliveryDate: obj['Дата доставки'],
     plan:         obj['Режим'] || obj['План'],
     city:         obj['Город']  || '',
