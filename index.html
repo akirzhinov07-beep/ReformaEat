@@ -1198,7 +1198,7 @@ nav{
         <div>
           <div class="plan-opt-name">Базовый рацион</div>
           <div class="plan-opt-sub">Завтрак · Обед · Ужин</div>
-          <div class="plan-opt-kcal-badge">До 1500 ккал</div>
+          <div class="plan-opt-kcal-badge">1500–1600 ккал</div>
         </div>
         <div class="plan-opt-price">1 490 ₽</div>
       </button>
@@ -1206,7 +1206,7 @@ nav{
         <div>
           <div class="plan-opt-name">С белковым бустером</div>
           <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
-          <div class="plan-opt-kcal-badge">1500+ ккал</div>
+          <div class="plan-opt-kcal-badge">Базовый рацион + доп. порция белка</div>
         </div>
         <div class="plan-opt-price">1 620 ₽</div>
       </button>
@@ -1376,7 +1376,7 @@ nav{
       <div>
         <div class="plan-opt-name">Базовый рацион</div>
         <div class="plan-opt-sub">Завтрак · Обед · Ужин</div>
-        <div class="plan-opt-kcal-badge">До 1500 ккал</div>
+        <div class="plan-opt-kcal-badge">1500–1600 ккал</div>
       </div>
       <div class="plan-opt-price">1 490 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
     </button>
@@ -1384,7 +1384,7 @@ nav{
       <div>
         <div class="plan-opt-name">С белковым бустером</div>
         <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
-        <div class="plan-opt-kcal-badge">1500+ ккал</div>
+        <div class="plan-opt-kcal-badge">Базовый рацион + доп. порция белка</div>
       </div>
       <div class="plan-opt-price">1 620 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
     </button>
@@ -1536,7 +1536,7 @@ function startPayment() {
 
   if (inTG) {
     // ── Telegram Mini App: нативная оплата ──
-    fetch('/create-tg-invoice.php', {
+    fetch('https://reformaeat.ru/create-tg-invoice.php', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: body
@@ -1565,7 +1565,7 @@ function startPayment() {
     });
   } else {
     // ── Браузер: редирект на страницу ЮКасса ──
-    fetch('/create-payment.php', {
+    fetch('https://reformaeat.ru/create-payment.php', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: body
