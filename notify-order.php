@@ -39,6 +39,7 @@ $phone   = $data['phone']   ?? '—';
 $city    = $data['city']    ?? '';
 $street  = $data['street']  ?? '';
 $house   = $data['house']   ?? '';
+$apt     = $data['apt']     ?? '';
 $comment = $data['comment'] ?? '';
 $promo   = $data['promo']   ?? '';
 $discount= $data['discount'] ?? 0;
@@ -56,7 +57,7 @@ if ($mode === '7day') {
          . "💰 Сумма: " . number_format($totalPrice, 0, '.', ' ') . " ₽\n";
 
     if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
-    if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", {$house}" : '') . "\n";
+    if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . ($apt ? ", кв. {$apt}" : '') . "\n";
     if ($comment) $msg .= "💬 {$comment}\n";
 
     $msg .= "\n";
@@ -102,7 +103,7 @@ if ($mode === '7day') {
          . "📅 Доставка: {$deliveryLabel}\n"
          . "🥗 План: {$plan}\n";
 
-    if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . "\n";
+    if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . ($apt ? ", кв. {$apt}" : '') . "\n";
     if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
     if ($comment) $msg .= "💬 {$comment}\n";
 
