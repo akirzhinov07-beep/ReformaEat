@@ -114,12 +114,21 @@ function getOrdersList() {
   const sheet = ss.getSheetByName(ORDERS_SHEET);
   if (!sheet) return respond({ ok: true, orders: [] });
 
-  // getDataRange() надёжнее getLastRow() — читает весь заполненный диапазон
-  const all = sheet.getDataRange().getValues();
-  if (all.length <= 1) return respond({ ok: true, orders: [] });
+  const lastCol  = sheet.getLastColumn();
+  if (lastCol === 0) return respond({ ok: true, orders: [] });
 
-  const headers = all[0];
-  const orders  = all.slice(1).reverse().map(function(row) {
+  const headers  = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const maxRows  = sheet.getMaxRows();
+
+  // Читаем ВСЕ строки листа (включая пустые в конце) — обходим баг getLastRow
+  const allRows  = sheet.getRange(2, 1, maxRows - 1, lastCol).getValues();
+
+  // Оставляем только строки где есть значение в столбце A (номер заказа)
+  const dataRows = allRows.filter(function(row) {
+    return row[0] !== '' && row[0] !== null && row[0] !== undefined;
+  });
+
+  const orders = dataRows.reverse().map(function(row) {
     const obj = {};
     headers.forEach(function(h, i) { obj[h] = row[i]; });
     return obj;
