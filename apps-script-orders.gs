@@ -112,12 +112,14 @@ function doPost(e) {
 function getOrdersList() {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(ORDERS_SHEET);
-  if (!sheet || sheet.getLastRow() <= 1) {
-    return respond({ ok: true, orders: [] });
-  }
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const rows    = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-  const orders  = rows.reverse().map(function(row) {
+  if (!sheet) return respond({ ok: true, orders: [] });
+
+  // getDataRange() надёжнее getLastRow() — читает весь заполненный диапазон
+  const all = sheet.getDataRange().getValues();
+  if (all.length <= 1) return respond({ ok: true, orders: [] });
+
+  const headers = all[0];
+  const orders  = all.slice(1).reverse().map(function(row) {
     const obj = {};
     headers.forEach(function(h, i) { obj[h] = row[i]; });
     return obj;
