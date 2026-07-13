@@ -5,14 +5,14 @@
  * 1. Открой свою Google Таблицу (ту же, где меню)
  * 2. Расширения → Apps Script
  * 3. Удали весь код и вставь этот файл целиком
- * 4. Нажми «Развернуть» → «Новое развёртывание»
+ * 4. Нажми «Развернуть» → «Управление развёртываниями»
+ *    - Выбери существующее, нажми карандаш (редактировать)
+ *    - Версия → «Новая версия» → «Развернуть»
+ *    URL остаётся прежним!
+ * 5. Если развёртывания ещё нет — «Новое развёртывание»:
  *    - Тип: Веб-приложение
  *    - Выполнять от имени: Я (своего аккаунта)
  *    - Доступ: Все (анонимный)
- * 5. Разреши доступ (выбери свой аккаунт Google)
- * 6. Скопируй URL развёртывания — вставь его в:
- *    - index.html → переменная APPS_SCRIPT_URL
- *    - admin.html → поле «URL Apps Script» в настройках
  */
 
 const ORDERS_SHEET  = 'Заказы';
@@ -42,6 +42,16 @@ function getNextOrderNum() {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // Администратор запрашивает список заказов через POST (без кеша)
+    if (data.action === 'getOrders') {
+      if ((data.token || '') !== ADMIN_TOKEN) {
+        return respond({ ok: false, error: 'unauthorized' });
+      }
+      return getOrdersList();
+    }
+
+    // Создание нового заказа
     const ss   = SpreadsheetApp.getActiveSpreadsheet();
     let sheet  = ss.getSheetByName(ORDERS_SHEET);
 
@@ -98,25 +108,31 @@ function doPost(e) {
   }
 }
 
+// ─── ЧТЕНИЕ ВСЕХ ЗАКАЗОВ ИЗ ТАБЛИЦЫ ─────────────────────────────────────
+function getOrdersList() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(ORDERS_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return respond({ ok: true, orders: [] });
+  }
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const rows    = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  const orders  = rows.reverse().map(function(row) {
+    const obj = {};
+    headers.forEach(function(h, i) { obj[h] = row[i]; });
+    return obj;
+  });
+  return respond({ ok: true, orders: orders });
+}
+
 // ─── ВЫДАЧА ЗАКАЗОВ ДЛЯ АДМИНКИ (GET) ────────────────────────────────────
+// Оставлен для совместимости. Используй POST + action:'getOrders' для свежих данных.
 function doGet(e) {
   try {
     if ((e.parameter.token || '') !== ADMIN_TOKEN) {
       return respond({ ok: false, error: 'unauthorized' });
     }
-    const ss    = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName(ORDERS_SHEET);
-    if (!sheet || sheet.getLastRow() <= 1) {
-      return respond({ ok: true, orders: [] });
-    }
-    const headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];
-    const rows    = sheet.getRange(2,1,sheet.getLastRow()-1,sheet.getLastColumn()).getValues();
-    const orders  = rows.reverse().map(row => {
-      const obj = {};
-      headers.forEach((h,i) => { obj[h] = row[i]; });
-      return obj;
-    });
-    return respond({ ok: true, orders });
+    return getOrdersList();
   } catch (err) {
     return respond({ ok: false, error: err.toString() });
   }

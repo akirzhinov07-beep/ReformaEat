@@ -369,10 +369,14 @@ function normalizeCloudOrder(obj) {
 
 async function fetchCloudOrders() {
   try {
-    const res = await fetch(appsScriptUrl + '?token=' + APPS_SCRIPT_TOKEN + '&_=' + Date.now());
+    const res = await fetch(appsScriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getOrders', token: APPS_SCRIPT_TOKEN })
+    });
     const data = await res.json();
     if (data.ok) return data.orders.map(normalizeCloudOrder);
-  } catch {}
+  } catch (e) { console.error('fetchCloudOrders:', e); }
   return null;
 }
 
