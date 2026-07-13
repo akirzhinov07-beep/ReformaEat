@@ -74,7 +74,7 @@ function doPost(e) {
       data.date        || new Date().toISOString(),
       mode === '7day'  ? '7 дней' : '1 день',
       data.name        || '',
-      data.phone       || '',
+      '',                              // phone — заполним ниже как текст
       data.deliveryDate|| '',
       data.plan        || '',
       data.city        || '',
@@ -88,8 +88,9 @@ function doPost(e) {
       data.comment     || ''
     ]);
 
-    // Prevent +7... phone from being parsed as a formula by Sheets
-    sheet.getRange(sheet.getLastRow(), 5).setNumberFormat('@');
+    // Сохраняем телефон как текст (иначе +7... воспринимается как формула)
+    const phoneCell = sheet.getRange(sheet.getLastRow(), 5);
+    phoneCell.setNumberFormat('@').setValue(data.phone || '');
 
     return respond({ ok: true, orderNum: orderNum });
   } catch (err) {
