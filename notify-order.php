@@ -102,6 +102,7 @@ if ($mode === '7day') {
          . "📅 Доставка: {$deliveryLabel}\n"
          . "🥗 План: {$plan}\n";
 
+    if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . "\n";
     if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
     if ($comment) $msg .= "💬 {$comment}\n";
 
