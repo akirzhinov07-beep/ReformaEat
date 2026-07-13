@@ -1614,7 +1614,8 @@ function saveOrderToCloud(order) {
 }
 
 /* ── РЕЗЕРВНЫЕ ДАННЫЕ (если таблица не настроена или нет сети) ── */
-const MENU_FALLBACK = {
+const MENU_FALLBACK = {breakfast:[],lunch:[],dinner:[],snack:[],booster:[]};
+const _MENU_FALLBACK_UNUSED = {
   breakfast:[
     {id:'b1',name:'Турецкий завтрак',kcal:395,p:26,f:22,c:14,day:'День 1',w:'280 г',photo_id:'1jFEu2HXDMIzx_4_74_Xv4nIL4gjL0ixr'},
     {id:'b2',name:'ПП хачапури',kcal:385,p:24,f:14,c:30,day:'День 2',w:'250 г',photo_id:'1bM5fg4SlooEdt7weVQyELL1OWVkX-bMi'},
@@ -1647,7 +1648,7 @@ const MENU_FALLBACK = {
     {id:'bo3',name:'Креветки',kcal:95,p:22,f:11,c:0,day:'',w:'100 г',photo_id:'1zeUglOE7-NCyK-EeFxJX3fJvlg3e0Yzs'},
     {id:'bo4',name:'Форель запеченная + зеленый горошек',kcal:235,p:24,f:11,c:8,day:'',w:'120 г',photo_id:'1nBwFidjQUNKe7IbNbhfhCwT4cYrIkgT_'},
   ],
-};
+}; // _MENU_FALLBACK_UNUSED
 
 /* ── ПАРСЕР CSV ── */
 function parseCsvRow(line) {
@@ -1748,11 +1749,11 @@ async function loadMenuFromSheet() {
     }
   } catch(e) {}
 
-  // Нет кеша — показываем fallback сразу, грузим таблицу в фоне
-  MENU = MENU_FALLBACK;
+  // Нет кеша — ждём загрузки таблицы, показываем loader
+  if (SHEET_CSV_URL) await fetchAndCacheMenu();
+  if (!MENU || !MENU.breakfast || MENU.breakfast.length === 0) MENU = MENU_FALLBACK;
   if (loader) loader.style.display = 'none';
   showModeSelector();
-  if (SHEET_CSV_URL) fetchAndCacheMenu();
 }
 
 async function fetchAndCacheMenu() {
@@ -1765,8 +1766,13 @@ async function fetchAndCacheMenu() {
     const text = await resp.text();
     const parsed = parseCsvMenu(text);
     if (parsed) {
+      const wasEmpty = !MENU || !MENU.breakfast || MENU.breakfast.length === 0;
       MENU = parsed;
       localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ts: Date.now(), expiresAt: getNextNoonMskMs(), menu: parsed}));
+      if (wasEmpty) {
+        ['breakfast','lunch','dinner','booster'].forEach(buildList);
+        updateCalc();
+      }
     } else { throw new Error('пустой CSV'); }
   } catch(e) {
     console.warn('reForma: не удалось загрузить меню из таблицы.', e);
