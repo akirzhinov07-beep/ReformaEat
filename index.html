@@ -1749,17 +1749,16 @@ async function loadMenuFromSheet() {
     }
   } catch(e) {}
 
-  // Нет кеша — ждём загрузки таблицы, показываем loader
-  if (SHEET_CSV_URL) await fetchAndCacheMenu();
-  if (!MENU || !MENU.breakfast || MENU.breakfast.length === 0) MENU = MENU_FALLBACK;
+  // Нет кеша — показываем UI сразу, меню грузится в фоне
   if (loader) loader.style.display = 'none';
   showModeSelector();
+  if (SHEET_CSV_URL) fetchAndCacheMenu(); // без await — обновит списки когда придёт
 }
 
 async function fetchAndCacheMenu() {
   try {
     const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 5000);
+    const tid  = setTimeout(() => ctrl.abort(), 15000);
     const resp = await fetch(SHEET_CSV_URL, { signal: ctrl.signal });
     clearTimeout(tid);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
