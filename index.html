@@ -2111,7 +2111,7 @@ function tryOrder() {
       localStorage.setItem('rf_orders',JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     }catch(e){}
-    fetch('https://reformaeat.ru/notify-order.php',{
+    fetch('https://reformaeat.ru/notifyorder.php',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({...order, mode:'1day'})
@@ -2486,7 +2486,7 @@ function tryOrder7() {
       orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
-    fetch('https://reformaeat.ru/notify-order.php',{
+    fetch('https://reformaeat.ru/notifyorder.php',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({...order, mode:'7day', days: weekDays})
