@@ -2450,6 +2450,26 @@ function tryOrder7() {
   const discountAmt7 = applyPromoDiscount(promoData, totalPrice, '7day');
   const finalPrice = Math.max(0, totalPrice - discountAmt7);
 
+  // Собираем блюда заранее: сначала из MENU, фолбек — из DOM-тайлов (на случай если MENU обновился в фоне)
+  const weekDays = dates.map((date, idx) => {
+    const day = {};
+    const card = document.querySelector(`.week-day-card[data-day-idx="${idx}"]`);
+    mealTypes.forEach(t => {
+      const dishId = sel7[idx][t];
+      if (!dishId) return;
+      const menuItem = (MENU[t]||[]).find(x => x.id === dishId);
+      if (menuItem) {
+        day[mealLabels[t]] = menuItem.name;
+      } else if (card) {
+        const col = card.querySelector(`.week-meal-col[data-meal="${t}"]`);
+        const tile = col && col.querySelector('.w7-dish.on');
+        const nameEl = tile && tile.querySelector('.w7-dish-name');
+        if (nameEl) day[mealLabels[t]] = nameEl.textContent;
+      }
+    });
+    return {date: date.toISOString().slice(0,10), dishes: day};
+  });
+
   let lines = `<strong>${name}</strong> · +7 ${document.getElementById('w7-fPhone').value}<br>`;
   lines += `Рацион на 7 дней: <strong>${finalPrice.toLocaleString('ru')} ₽</strong>`;
   if (promoData) lines += ` <span style="color:var(--green,#4e8c3a)">(${promo}: ${promoData.label})</span>`;
@@ -2459,8 +2479,8 @@ function tryOrder7() {
   dates.forEach((date, idx) => {
     lines += `<strong>${dayShort[date.getDay()]}, ${date.getDate()} ${MONTHS_SHORT_RU[date.getMonth()]}:</strong><br>`;
     mealTypes.forEach(t => {
-      const d = (MENU[t]||[]).find(x => x.id === sel7[idx][t]);
-      if (d) lines += `&nbsp;&nbsp;${mealLabels[t]}: ${d.name}<br>`;
+      const dishName = weekDays[idx] && weekDays[idx].dishes[mealLabels[t]];
+      if (dishName) lines += `&nbsp;&nbsp;${mealLabels[t]}: ${dishName}<br>`;
     });
   });
   document.getElementById('modalSummary').innerHTML = lines;
@@ -2471,14 +2491,6 @@ function tryOrder7() {
   document.getElementById('overlay').classList.add('show');
 
   (function(){
-    const weekDays = dates.map((date, idx) => {
-      const day = {};
-      mealTypes.forEach(t => {
-        const d = (MENU[t]||[]).find(x => x.id === sel7[idx][t]);
-        if (d) day[mealLabels[t]] = d.name;
-      });
-      return {date: date.toISOString().slice(0,10), dishes: day};
-    });
     const order = {
       id: 'tmp-' + Date.now(), date: new Date().toISOString(),
       mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
