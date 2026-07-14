@@ -300,7 +300,8 @@ const CREDS = { login: 'reforma2025', pass: 'reforma2025' };
 const SESSION_KEY = 'rf_admin_session';
 const SCRIPT_URL_KEY = 'rf_apps_script_url';
 const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
-let appsScriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || '';
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8Ph-V6-YY0QUB_KGEl9wqSHR5StRjVGw1k-QhQ6LelWfmQQPPC2HoGZXwG_TK1ydPjA/exec';
+let appsScriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_SCRIPT_URL;
 
 const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
