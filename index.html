@@ -2011,12 +2011,17 @@ const PROMO_CODES = {
   'REFORMA2026': {discount: 1490, label: 'скидка 1 490 ₽'},
   'REFORMA2025': {discount: 200,  label: 'скидка 200 ₽'},
   'PROMO95':     {percent: 95, mode: '7day', label: 'скидка 95% на рацион 7 дней'},
-  'REFORMA10':   {finalPrice: 100, label: 'тестовый заказ за 100 ₽'},
+  'REFORMA10':   {finalPrice: 100, finalPrice7: 700, label: 'тестовый заказ: 100 ₽ / 700 ₽ на 7 дней'},
 };
 
-function applyPromoDiscount(promoData, totalPrice) {
+function applyPromoDiscount(promoData, totalPrice, mode) {
   if (!promoData) return 0;
-  if (promoData.finalPrice !== undefined) return Math.max(0, totalPrice - promoData.finalPrice);
+  if (promoData.finalPrice !== undefined || promoData.finalPrice7 !== undefined) {
+    const fp = (mode === '7day' && promoData.finalPrice7 !== undefined)
+      ? promoData.finalPrice7
+      : promoData.finalPrice;
+    return Math.max(0, totalPrice - fp);
+  }
   if (promoData.percent) return Math.round(totalPrice * promoData.percent / 100);
   return promoData.discount || 0;
 }
@@ -2075,7 +2080,7 @@ function tryOrder() {
     if(d) lines+=`${labels[t]}: ${d.name}<br>`;
   });
   const amount1day = plan==='2000' ? 1620 : 1490;
-  const discountAmt = applyPromoDiscount(promoData, amount1day);
+  const discountAmt = applyPromoDiscount(promoData, amount1day, '1day');
   const totalAmt = Math.max(0, amount1day - discountAmt);
   document.getElementById('modalSummary').innerHTML=lines;
   document.getElementById('modalPrice').textContent = totalAmt.toLocaleString('ru') + ' ₽';
@@ -2442,7 +2447,7 @@ function tryOrder7() {
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
   const comment = document.getElementById('w7-fComment').value.trim();
   const totalPrice = PLAN_PRICE[plan7] * 7;
-  const discountAmt7 = applyPromoDiscount(promoData, totalPrice);
+  const discountAmt7 = applyPromoDiscount(promoData, totalPrice, '7day');
   const finalPrice = Math.max(0, totalPrice - discountAmt7);
 
   let lines = `<strong>${name}</strong> · +7 ${document.getElementById('w7-fPhone').value}<br>`;
