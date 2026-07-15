@@ -141,6 +141,34 @@
   .refresh-btn { padding: 5px 14px; background: none; border: 1.5px solid #e0ddd8; border-radius: 8px; font-size: 12px; color: #888; cursor: pointer; transition: all .2s; margin-left: 10px; vertical-align: middle; }
   .refresh-btn:hover { border-color: #ce5b40; color: #ce5b40; }
 
+  /* ── CALENDAR ── */
+  .cal-nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .cal-nav-btn { padding:6px 14px; border:1.5px solid #e0ddd8; border-radius:8px; background:#fff; font-size:13px; color:#666; cursor:pointer; transition:all .2s; }
+  .cal-nav-btn:hover { border-color:#ce5b40; color:#ce5b40; }
+  .cal-nav-today { background:#ce5b40; color:#fff; border-color:#ce5b40; }
+  .cal-nav-today:hover { background:#b84e36; border-color:#b84e36; color:#fff; }
+  .cal-range { font-size:14px; font-weight:600; color:#2d2d2d; padding:0 4px; }
+  .cal-day { margin-bottom:28px; }
+  .cal-day-hdr { font-size:14px; font-weight:700; color:#2d2d2d; padding:10px 0 10px; border-bottom:2px solid #e0ddd8; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .cal-day-hdr.today-hdr { border-bottom-color:#ce5b40; }
+  .cal-today-dot { width:8px; height:8px; border-radius:50%; background:#ce5b40; display:inline-block; }
+  .cal-count-badge { font-size:11px; font-weight:600; color:#ce5b40; background:#fde8e4; border-radius:10px; padding:2px 9px; }
+  .cal-empty { color:#bbb; font-size:13px; padding:4px 0 8px; }
+  .cal-card { background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 10px rgba(0,0,0,.07); border-left:4px solid #ce5b40; }
+  .cal-card.c2000 { border-left-color:#4a87b5; }
+  .cal-card-hdr { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .cal-name { font-size:14px; font-weight:700; color:#2d2d2d; }
+  .cal-phone { font-size:12px; color:#888; margin-top:2px; }
+  .cal-plan-tag { font-size:11px; font-weight:600; white-space:nowrap; padding:3px 9px; border-radius:8px; background:#fde8e4; color:#ce5b40; }
+  .cal-plan-tag.t2000 { background:#daeaf5; color:#4a87b5; }
+  .cal-addr { font-size:12px; color:#888; margin-bottom:8px; }
+  .cal-meals { display:flex; flex-direction:column; gap:5px; }
+  .cal-meal-row { display:flex; gap:8px; font-size:13px; align-items:baseline; }
+  .cal-meal-lbl { color:#aaa; font-size:11px; min-width:58px; flex-shrink:0; }
+  .cal-meal-val { color:#2d2d2d; line-height:1.4; }
+  .cal-no-dishes { font-size:12px; color:#bbb; font-style:italic; }
+  .cal-comment { font-size:12px; color:#888; margin-top:8px; border-top:1px solid #f0ede8; padding-top:6px; }
+
   @media (max-width: 600px) {
     .content { padding: 16px 12px; }
     .stat-card { min-width: 130px; padding: 16px 18px; }
@@ -200,6 +228,7 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="showTab('orders')">Заказы</button>
       <button class="tab-btn" onclick="showTab('clients')">Клиенты</button>
+      <button class="tab-btn" onclick="showTab('deliveries')">Доставки</button>
       <button class="tab-btn" onclick="showTab('training')">Статистика тренировок</button>
       <button class="tab-btn" onclick="showTab('settings')">Настройки</button>
     </div>
@@ -254,6 +283,18 @@
       </div>
     </div>
 
+    <!-- DELIVERIES -->
+    <div id="tab-deliveries" class="section">
+      <div class="section-title">Расписание доставок</div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calShift(-7)">← Назад</button>
+        <button class="cal-nav-btn cal-nav-today" onclick="calToday()">Сегодня</button>
+        <button class="cal-nav-btn" onclick="calShift(7)">Вперёд →</button>
+        <span class="cal-range" id="cal-range-label"></span>
+      </div>
+      <div id="cal-body"></div>
+    </div>
+
     <!-- TRAINING -->
     <div id="tab-training" class="section">
       <div class="section-title">Переходы на тренировки</div>
@@ -305,6 +346,9 @@ let appsScriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_SCRIPT_URL;
 
 const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const MONTHS_LONG = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const DAYS_LONG = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+let _calOffset = 0;
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -358,6 +402,8 @@ function normalizeCloudOrder(obj) {
     name:         obj['Имя'],
     phone:        (!phone || typeof phone === 'object' || String(phone).startsWith('#')) ? '' : String(phone),
     deliveryDate: obj['Дата доставки'],
+    mode:         obj['Режим'] || '',
+    mealPlan:     obj['План']  || '',
     plan:         obj['Режим'] || obj['План'],
     city:         obj['Город']  || '',
     street:       obj['Улица']  || '',
@@ -545,6 +591,11 @@ async function loadData() {
       <div class="chart-bar-label">${d.label}</div>`;
     chartEl.appendChild(wrap);
   });
+
+  window._calOrders = orders;
+  if (document.getElementById('tab-deliveries') && document.getElementById('tab-deliveries').classList.contains('active')) {
+    buildDeliveryCalendar();
+  }
 }
 
 function toggleDishes(id) {
@@ -571,6 +622,9 @@ function showTab(name) {
     document.getElementById('script-url-input').value = appsScriptUrl;
     document.getElementById('script-url-status').textContent = '';
   }
+  if (name === 'deliveries') {
+    buildDeliveryCalendar();
+  }
 }
 
 function clearOrders() {
@@ -590,6 +644,158 @@ function clearTraining() {
 function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parse7DayDishes(dishesStr) {
+  if (!dishesStr) return {};
+  const result = {};
+  dishesStr.split(' | ').forEach(part => {
+    const colonIdx = part.indexOf(':');
+    if (colonIdx === -1) return;
+    const date = part.slice(0, colonIdx).trim();
+    const mealsStr = part.slice(colonIdx + 1).trim();
+    const meals = {};
+    mealsStr.split(', ').forEach(m => {
+      const eqIdx = m.indexOf('=');
+      if (eqIdx === -1) return;
+      meals[m.slice(0, eqIdx).trim()] = m.slice(eqIdx + 1).trim();
+    });
+    result[date] = meals;
+  });
+  return result;
+}
+
+function parse1DayDishes(dishesStr) {
+  if (!dishesStr) return {};
+  const result = {};
+  const re = /(?:(?:^|(?:, )))(Завтрак|Обед|Ужин|Бустер): ([^]*?)(?=, (?:Завтрак|Обед|Ужин|Бустер): |$)/g;
+  let m;
+  while ((m = re.exec(dishesStr)) !== null) result[m[1]] = m[2];
+  return result;
+}
+
+function normalizeDelivDate(str) {
+  if (!str) return null;
+  const s = String(str);
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  try {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  } catch(e) {}
+  return null;
+}
+
+function calShift(days) {
+  _calOffset += days;
+  buildDeliveryCalendar();
+}
+
+function calToday() {
+  _calOffset = 0;
+  buildDeliveryCalendar();
+}
+
+function buildDeliveryCalendar() {
+  const body = document.getElementById('cal-body');
+  if (!body) return;
+
+  const orders = window._calOrders || [];
+  const todayBase = new Date();
+  todayBase.setHours(0, 0, 0, 0);
+  const todayStr = todayBase.toISOString().slice(0, 10);
+
+  const start = new Date(todayBase);
+  start.setDate(start.getDate() + _calOffset);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+
+  const rangeLabel = document.getElementById('cal-range-label');
+  if (rangeLabel) {
+    rangeLabel.textContent = start.getDate() + ' ' + MONTHS_LONG[start.getMonth()] + ' — '
+      + end.getDate() + ' ' + MONTHS_LONG[end.getMonth()];
+  }
+
+  // Build date keys for the 7-day window
+  const dateMap = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    dateMap[d.toISOString().slice(0, 10)] = [];
+  }
+
+  orders.forEach(o => {
+    const addr = [o.city, o.street, o.house ? 'д.' + o.house : '', o.apt ? 'кв.' + o.apt : ''].filter(Boolean).join(', ');
+    const planLabel = o.mealPlan || o.plan || '—';
+
+    if (o.mode === '7day') {
+      const dayMap = parse7DayDishes(o.dishesStr);
+      Object.entries(dayMap).forEach(([date, meals]) => {
+        if (dateMap[date] !== undefined) {
+          dateMap[date].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: true, addr, comment: o.comment });
+        }
+      });
+    } else {
+      const delivDate = normalizeDelivDate(o.deliveryDate);
+      if (delivDate && dateMap[delivDate] !== undefined) {
+        const meals = parse1DayDishes(o.dishesStr);
+        dateMap[delivDate].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: false, addr, comment: o.comment });
+      }
+    }
+  });
+
+  const MEAL_ORDER = ['Завтрак', 'Обед', 'Ужин', 'Бустер'];
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    const isToday = key === todayStr;
+    const clients = dateMap[key] || [];
+
+    const cnt = clients.length;
+    const badge = cnt > 0
+      ? `<span class="cal-count-badge">${cnt} клиент${cnt === 1 ? '' : cnt < 5 ? 'а' : 'ов'}</span>`
+      : '';
+
+    html += `<div class="cal-day">
+      <div class="cal-day-hdr${isToday ? ' today-hdr' : ''}">
+        ${isToday ? '<span class="cal-today-dot"></span>' : ''}
+        ${esc(DAYS_LONG[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS_LONG[d.getMonth()])}
+        ${badge}
+      </div>`;
+
+    if (cnt === 0) {
+      html += `<div class="cal-empty">Нет заказов</div>`;
+    } else {
+      clients.forEach(c => {
+        const is2000 = c.plan && c.plan.includes('2000');
+        const cardCls = is2000 ? ' c2000' : '';
+        const tagCls  = is2000 ? ' t2000' : '';
+        const mealRows = MEAL_ORDER
+          .filter(lbl => c.meals && c.meals[lbl])
+          .map(lbl => `<div class="cal-meal-row"><span class="cal-meal-lbl">${esc(lbl)}</span><span class="cal-meal-val">${esc(c.meals[lbl])}</span></div>`)
+          .join('');
+        html += `<div class="cal-card${cardCls}">
+          <div class="cal-card-hdr">
+            <div>
+              <div class="cal-name">${esc(c.name || '—')}</div>
+              <div class="cal-phone">${esc(c.phone || '')}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span class="cal-plan-tag${tagCls}">${esc(c.plan)}</span>
+              <span style="font-size:10px;color:#aaa">${c.is7day ? '7 дней' : '1 день'}</span>
+            </div>
+          </div>
+          ${c.addr ? `<div class="cal-addr">${esc(c.addr)}</div>` : ''}
+          <div class="cal-meals">${mealRows || '<div class="cal-no-dishes">Состав не указан</div>'}</div>
+          ${c.comment ? `<div class="cal-comment">💬 ${esc(c.comment)}</div>` : ''}
+        </div>`;
+      });
+    }
+    html += `</div>`;
+  }
+  body.innerHTML = html;
 }
 
 // Auto-login if session exists
