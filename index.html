@@ -1771,6 +1771,9 @@ async function fetchAndCacheMenu() {
       if (wasEmpty) {
         ['breakfast','lunch','dinner','booster'].forEach(buildList);
         updateCalc();
+        // Перестраиваем 7-дневные тайлы если форма открыта
+        const app7 = document.getElementById('app7day');
+        if (app7 && app7.style.display !== 'none') build7DayUI();
       }
     } else { throw new Error('пустой CSV'); }
   } catch(e) {
