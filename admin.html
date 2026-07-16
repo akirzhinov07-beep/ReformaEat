@@ -727,7 +727,7 @@ function buildDeliveryCalendar() {
     const addr = [o.city, o.street, o.house ? 'д.' + o.house : '', o.apt ? 'кв.' + o.apt : ''].filter(Boolean).join(', ');
     const planLabel = o.mealPlan || o.plan || '—';
 
-    if (o.mode === '7day') {
+    if (o.mode === '7 дней' || o.mode === '7day' || (o.dishesStr && o.dishesStr.includes(' | '))) {
       const dayMap = parse7DayDishes(o.dishesStr);
       Object.entries(dayMap).forEach(([date, meals]) => {
         if (dateMap[date] !== undefined) {
