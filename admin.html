@@ -337,8 +337,10 @@
 </div>
 
 <script>
-const CREDS = { login: 'reforma2025', pass: 'reforma2025' };
-const SESSION_KEY = 'rf_admin_session';
+const CREDS      = { login: 'reforma2025', pass: 'reforma2025' };
+const CHEF_CREDS = { login: 'Liana07',    pass: 'Liana07' };
+const SESSION_KEY      = 'rf_admin_session';
+const SESSION_ROLE_KEY = 'rf_admin_role';
 const SCRIPT_URL_KEY = 'rf_apps_script_url';
 const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
 const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8Ph-V6-YY0QUB_KGEl9wqSHR5StRjVGw1k-QhQ6LelWfmQQPPC2HoGZXwG_TK1ydPjA/exec';
@@ -372,6 +374,11 @@ function doLogin() {
   const p = document.getElementById('l-pass').value.trim();
   if (l === CREDS.login && p === CREDS.pass) {
     sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(SESSION_ROLE_KEY, 'admin');
+    showDashboard();
+  } else if (l === CHEF_CREDS.login && p === CHEF_CREDS.pass) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(SESSION_ROLE_KEY, 'chef');
     showDashboard();
   } else {
     document.getElementById('login-error').textContent = 'Неверный логин или пароль';
@@ -382,8 +389,13 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
 
+function isChef() {
+  return sessionStorage.getItem(SESSION_ROLE_KEY) === 'chef';
+}
+
 function doLogout() {
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_ROLE_KEY);
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
 }
@@ -391,7 +403,25 @@ function doLogout() {
 function showDashboard() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
+  if (isChef()) applyChefView();
   loadData();
+}
+
+function applyChefView() {
+  // Скрываем всё лишнее для повара — только вкладка «Доставки»
+  document.querySelector('.stats-row') && (document.querySelector('.stats-row').style.display = 'none');
+  document.querySelector('.danger-zone') && (document.querySelector('.danger-zone').style.display = 'none');
+  // Скрываем все кнопки вкладок кроме «Доставки»
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    if (!btn.textContent.includes('Доставки')) btn.style.display = 'none';
+  });
+  // Активируем вкладку Доставки
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const delivTab = document.getElementById('tab-deliveries');
+  const delivBtn = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes('Доставки'));
+  if (delivTab) delivTab.classList.add('active');
+  if (delivBtn) delivBtn.classList.add('active');
 }
 
 function normalizeCloudOrder(obj) {
