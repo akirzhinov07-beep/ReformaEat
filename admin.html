@@ -175,6 +175,11 @@
   .add-week-btn:hover{background:#b84e36}
   .week-del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;vertical-align:middle}
   .week-del-btn:hover{color:#ce5b40}
+  .mode-toggle-btn{background:none;border:1px solid #e0ddd8;border-radius:5px;color:#888;cursor:pointer;font-size:10px;padding:1px 5px;transition:all .15s;vertical-align:middle;white-space:nowrap}
+  .mode-toggle-btn:hover{border-color:#ce5b40;color:#ce5b40}
+  .pkg-inputs{min-width:140px}
+  .pkg-row{display:flex;gap:3px;align-items:center;flex-wrap:nowrap}
+  .pkg-calc-lbl{font-size:10px;color:#aaa;margin-top:2px;white-space:nowrap}
   .ing-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   .ing-table th{background:#faf9f7;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#999;border-bottom:1px solid #f0ede8;white-space:nowrap}
   .ing-table td{padding:7px 12px;border-bottom:1px solid #f8f6f3;vertical-align:middle}
@@ -920,7 +925,6 @@ const ING = [
   {id:'сыр_адыг',  name:'Адыгейский сыр',              cat:'Молочное и яйца',   unit:'кг'},
   {id:'кур_гр',    name:'Грудь куриная на кости',      cat:'Мясо и птица',      unit:'кг'},
   {id:'кур_бедро', name:'Бедро куриное на кости',      cat:'Мясо и птица',      unit:'кг'},
-  {id:'индейка',   name:'Филе индейки',                cat:'Мясо и птица',      unit:'кг'},
   {id:'говядина',  name:'Говядина мякоть',             cat:'Мясо и птица',      unit:'кг'},
   {id:'сосиска',   name:'Сосиска халяльная',           cat:'Мясо и птица',      unit:'кг'},
   {id:'форель',    name:'Форель (филе, охл.)',          cat:'Рыба и море',       unit:'кг'},
@@ -949,7 +953,7 @@ const ING = [
   {id:'огурец',    name:'Огурец',                      cat:'Овощи',             unit:'кг'},
   {id:'сельдерей', name:'Стебель сельдерея',           cat:'Овощи',             unit:'кг'},
   {id:'чеснок',    name:'Чеснок',                      cat:'Овощи',             unit:'кг'},
-  {id:'зелень',    name:'Зелень (укроп, петрушка)',    cat:'Овощи',             unit:'кг'},
+  {id:'зелень',    name:'Зелень (укроп, петрушка)',    cat:'Овощи',             unit:'пучок', gpx:30},
   {id:'микс_сал',  name:'Микс салатов',                cat:'Овощи',             unit:'кг'},
   {id:'кап_кв',    name:'Квашеная капуста',            cat:'Овощи',             unit:'кг'},
   {id:'яблоко',    name:'Яблоко зелёное',              cat:'Фрукты и ягоды',    unit:'кг'},
@@ -998,8 +1002,8 @@ const TC = {
     ing:[{id:'говядина',g:190},{id:'гречка',g:65},{id:'сметана',g:40},{id:'лук',g:70},{id:'томат_паст',g:8},{id:'мука_пш',g:5},{id:'масло_раст',g:8},{id:'зелень',g:5}]},
   'У-3':{name:'ПП шаурма с курицей',        cat:'Ужин',
     ing:[{id:'кур_гр',g:200},{id:'лаваш',g:60},{id:'капуста',g:70},{id:'огурец',g:60},{id:'помидор',g:80},{id:'йогурт',g:50},{id:'масло_олив',g:5}]},
-  'У-4':{name:'ПП вок с индейкой',          cat:'Ужин',
-    ing:[{id:'индейка',g:170},{id:'лапша_рис',g:45},{id:'брокколи',g:120},{id:'кабачок',g:90},{id:'морковь',g:70},{id:'лук_кр',g:50},{id:'соус_соев',g:15},{id:'масло_кун',g:5},{id:'масло_раст',g:3}]},
+  'У-4':{name:'ПП вок с курицей',            cat:'Ужин',
+    ing:[{id:'кур_гр',g:200},{id:'лапша_рис',g:45},{id:'брокколи',g:120},{id:'кабачок',g:90},{id:'морковь',g:70},{id:'лук_кр',g:50},{id:'соус_соев',g:15},{id:'масло_кун',g:5},{id:'масло_раст',g:3}]},
   'У-5':{name:'Куриные котлеты + овощи гриль',cat:'Ужин',
     ing:[{id:'кур_гр',g:260},{id:'яйца',g:55},{id:'лук',g:30},{id:'кабачок',g:140},{id:'баклажан',g:130},{id:'помидор',g:80},{id:'масло_олив',g:10}]},
   'Б-1':{name:'Бустер: Бедро + кукуруза',   cat:'Бустер',
@@ -1079,9 +1083,53 @@ function savePriceCell(weekStr, ingId, val) {
   updateCostResults();
 }
 
+function toggleIngMode(ingId) {
+  const data = getPurchaseData();
+  if (!data.ingModes) data.ingModes = {};
+  if (data.ingModes[ingId] === 'pkg') delete data.ingModes[ingId];
+  else data.ingModes[ingId] = 'pkg';
+  savePurchaseData(data);
+  renderPurchaseTab();
+}
+
+function savePkgInput(weekStr, ingId, field, val) {
+  const data = getPurchaseData();
+  if (!data.pkgInputs) data.pkgInputs = {};
+  if (!data.pkgInputs[weekStr]) data.pkgInputs[weekStr] = {};
+  if (!data.pkgInputs[weekStr][ingId]) data.pkgInputs[weekStr][ingId] = {};
+  data.pkgInputs[weekStr][ingId][field] = val;
+
+  const pkg = data.pkgInputs[weekStr][ingId];
+  const paid = parseFloat(pkg.paid);
+  const grams = parseFloat(pkg.grams);
+  const ing = ingById(ingId);
+  if (!data.prices[weekStr]) data.prices[weekStr] = {};
+  let ppu = null;
+  if (!isNaN(paid) && paid > 0 && !isNaN(grams) && grams > 0 && ing) {
+    ppu = (ing.unit === 'шт' || ing.unit === 'пучок')
+      ? paid * (ing.gpx / grams)
+      : paid / grams * 1000;
+    data.prices[weekStr][ingId] = Math.round(ppu * 100) / 100;
+  } else {
+    delete data.prices[weekStr][ingId];
+  }
+  savePurchaseData(data);
+
+  // Update calc label in place (no full re-render = focus stays)
+  const labelEl = document.getElementById('pkgc-' + weekStr.replace(/-/g,'') + '-' + ingId);
+  if (labelEl) {
+    labelEl.textContent = ppu !== null
+      ? '= ' + ppu.toFixed(1) + ' ₽/' + (ing ? ing.unit : 'кг')
+      : '';
+  }
+  updateCostResults();
+}
+
 function renderPurchaseTab() {
   const data = getPurchaseData();
   const weeks = data.weeks;
+  const ingModes = data.ingModes || {};
+  const pkgInputs = data.pkgInputs || {};
   const wrap = document.getElementById('ing-table-wrap');
   if (!wrap) return;
 
@@ -1092,7 +1140,6 @@ function renderPurchaseTab() {
     return;
   }
 
-  // Group ING by category
   const catOrder = [];
   const catMap = {};
   ING.forEach(ing => {
@@ -1101,7 +1148,7 @@ function renderPurchaseTab() {
   });
 
   let html = '<div class="table-wrap"><table class="ing-table"><thead><tr>';
-  html += '<th>Ингредиент</th><th style="white-space:nowrap">Ед. цены</th>';
+  html += '<th>Ингредиент</th><th style="white-space:nowrap">Ед. / режим</th>';
   weeks.forEach(w => {
     html += '<th class="week-th">нед. ' + fmtWeek(w) + '<br>'
       + '<button class="week-del-btn" onclick="deleteWeek(\'' + w + '\')" title="Удалить">✕</button></th>';
@@ -1111,12 +1158,45 @@ function renderPurchaseTab() {
   catOrder.forEach(cat => {
     html += '<tr class="ing-cat-row"><td colspan="' + (2 + weeks.length) + '">' + esc(cat) + '</td></tr>';
     catMap[cat].forEach(ing => {
-      const unitLabel = '₽/' + ing.unit;
-      html += '<tr><td>' + esc(ing.name) + '</td><td class="unit-cell">' + unitLabel + '</td>';
+      const isPkg = ingModes[ing.id] === 'pkg';
+      const unitLabel = isPkg ? 'упак.' : '₽/' + ing.unit;
+      const toggleTitle = isPkg ? 'Ввод ₽/' + ing.unit : 'Ввод цена + вес упаковки';
+      const toggleIcon = isPkg ? '✏' : '📦';
+
+      html += '<tr><td>' + esc(ing.name) + '</td>';
+      html += '<td class="unit-cell" style="white-space:nowrap">' + unitLabel
+        + '&nbsp;<button class="mode-toggle-btn" onclick="toggleIngMode(\'' + ing.id + '\')" title="' + toggleTitle + '">'
+        + toggleIcon + '</button></td>';
+
       weeks.forEach(w => {
-        const price = (data.prices[w] && data.prices[w][ing.id]) ? data.prices[w][ing.id] : '';
-        html += '<td><input class="price-inp" type="number" min="0" step="1" placeholder="—" value="' + price + '"'
-          + ' oninput="savePriceCell(\'' + w + '\',\'' + ing.id + '\',this.value)"></td>';
+        if (isPkg) {
+          const pkgW = (pkgInputs[w] && pkgInputs[w][ing.id]) || {};
+          const paid = pkgW.paid || '';
+          const grams = pkgW.grams || '';
+          const labelId = 'pkgc-' + w.replace(/-/g,'') + '-' + ing.id;
+          let calcText = '';
+          if (paid && grams && parseFloat(paid) > 0 && parseFloat(grams) > 0) {
+            const ppu = (ing.unit === 'шт' || ing.unit === 'пучок')
+              ? parseFloat(paid) * (ing.gpx / parseFloat(grams))
+              : parseFloat(paid) / parseFloat(grams) * 1000;
+            calcText = '= ' + ppu.toFixed(1) + ' ₽/' + ing.unit;
+          }
+          html += '<td><div class="pkg-inputs">'
+            + '<div class="pkg-row">'
+            + '<input class="price-inp" style="width:56px" type="number" min="0" step="1" placeholder="₽" value="' + paid + '"'
+            + ' oninput="savePkgInput(\'' + w + '\',\'' + ing.id + '\',\'paid\',this.value)">'
+            + '<span style="color:#aaa;font-size:11px">₽/</span>'
+            + '<input class="price-inp" style="width:52px" type="number" min="0" step="1" placeholder="г" value="' + grams + '"'
+            + ' oninput="savePkgInput(\'' + w + '\',\'' + ing.id + '\',\'grams\',this.value)">'
+            + '<span style="color:#aaa;font-size:11px">г</span>'
+            + '</div>'
+            + '<div class="pkg-calc-lbl" id="' + labelId + '">' + calcText + '</div>'
+            + '</div></td>';
+        } else {
+          const price = (data.prices[w] && data.prices[w][ing.id]) ? data.prices[w][ing.id] : '';
+          html += '<td><input class="price-inp" type="number" min="0" step="1" placeholder="—" value="' + price + '"'
+            + ' oninput="savePriceCell(\'' + w + '\',\'' + ing.id + '\',this.value)"></td>';
+        }
       });
       html += '</tr>';
     });
