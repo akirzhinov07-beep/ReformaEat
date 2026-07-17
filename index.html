@@ -1447,6 +1447,8 @@ nav{
         </div>
       </div>
       <div class="form-section">
+        <div class="cal-notice" id="w7-delivery-notice" style="display:none"></div>
+        <div class="delivery-date-badge" id="w7-delivery-badge" style="display:none;margin-bottom:12px"></div>
         <div class="delivery-info-msg">🚚 Стоимость доставки по г.о. Нальчик составляет 150 рублей и оплачивается отдельно курьеру. Доставка вне г.о. Нальчик согласовывается с курьером отдельно.</div>
       </div>
       <div class="calc-bottom">
@@ -1978,33 +1980,32 @@ function selectPlan(p) {
 function getMoscowNow() {
   return new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
 }
-function getAutoDeliveryDate() {
+// Вс–Ср → ближайший четверг; Чт–Сб → ближайшее воскресенье
+function getFirstDeliveryDate() {
   const msk = getMoscowNow();
-  const days = msk.getHours() < 12 ? 0 : 1;
   const d = new Date(msk);
-  d.setDate(d.getDate() + days);
+  d.setHours(0, 0, 0, 0);
+  const dow = msk.getDay(); // 0=Вс … 6=Сб
+  d.setDate(d.getDate() + (dow <= 3 ? 4 - dow : 7 - dow));
   return d;
 }
+function getAutoDeliveryDate() { return getFirstDeliveryDate(); }
 function getDeliveryDateStr() {
-  const d = getAutoDeliveryDate();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
+  const d = getFirstDeliveryDate();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function renderDeliveryDate() {
-  const msk = getMoscowNow();
-  const isBefore12 = msk.getHours() < 12;
-  const d = getAutoDeliveryDate();
-  const dateStr = d.toLocaleDateString('ru',{day:'numeric',month:'long',weekday:'long'});
+  const dow = getMoscowNow().getDay();
+  const d = getFirstDeliveryDate();
+  const dateStr = d.toLocaleDateString('ru', {day:'numeric', month:'long', weekday:'long'});
   const notice = document.getElementById('deliveryNotice');
-  const badge = document.getElementById('deliveryDateBadge');
+  const badge  = document.getElementById('deliveryDateBadge');
   if (!notice || !badge) return;
-  if (isBefore12) {
-    notice.innerHTML = '⏰ Сейчас <b>до 12:00 по Москве</b> — доставим <b>сегодня</b>';
-    badge.style.background = 'var(--blue,#3a7bfd)';
+  if (dow <= 3) {
+    notice.innerHTML = '📅 Заказы <b>воскресенье–среда</b> — доставка в <b>четверг</b>';
+    badge.style.background = 'var(--coral,#ce5b40)';
   } else {
-    notice.innerHTML = '⏰ Сейчас <b>после 12:00 по Москве</b> — доставим <b>завтра</b>';
+    notice.innerHTML = '📅 Заказы <b>четверг–суббота</b> — доставка в <b>воскресенье</b>';
     badge.style.background = 'var(--ink3,#888)';
   }
   badge.textContent = '📅 ' + dateStr;
@@ -2215,13 +2216,14 @@ const DAYS_RU = ['Воскресенье','Понедельник','Вторни
 const MONTHS_SHORT_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 
 function get7DayDates() {
-  const msk = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
-  const daysToAdd = msk.getHours() < 12 ? 0 : 1;
-  return Array.from({length:7}, (_,i) => {
-    const d = new Date(msk);
-    d.setDate(d.getDate() + daysToAdd + i);
-    return d;
-  });
+  const start = getFirstDeliveryDate();
+  const dates = [];
+  const cur = new Date(start);
+  while (dates.length < 7) {
+    if (cur.getDay() !== 6) dates.push(new Date(cur)); // пропускаем субботу
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
 }
 
 function selectPlan7(p) {
@@ -2246,6 +2248,26 @@ function build7DayUI() {
   const total = 7 * mealTypes.length;
   const tcEl = document.getElementById('week-total-count');
   if (tcEl) tcEl.textContent = total;
+
+  // Обновляем уведомление о расписании доставок
+  const w7Notice = document.getElementById('w7-delivery-notice');
+  const w7Badge  = document.getElementById('w7-delivery-badge');
+  if (w7Notice && dates.length === 7) {
+    const dow7 = getMoscowNow().getDay();
+    const rule = dow7 <= 3
+      ? '📅 Заказы <b>воскресенье–среда</b> — первая доставка в <b>четверг</b>'
+      : '📅 Заказы <b>четверг–суббота</b> — первая доставка в <b>воскресенье</b>';
+    const first = dates[0].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+    const last  = dates[6].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+    w7Notice.innerHTML = rule + `<br><span style="color:#888;font-weight:400;font-size:12px">С ${first} по ${last} · суббота — выходной повара</span>`;
+    w7Notice.style.display = '';
+  }
+  if (w7Badge && dates.length === 7) {
+    const dow7 = getMoscowNow().getDay();
+    w7Badge.style.background = dow7 <= 3 ? 'var(--coral,#ce5b40)' : 'var(--ink3,#888)';
+    w7Badge.textContent = '📅 ' + dates[0].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+    w7Badge.style.display = '';
+  }
 
   const container = document.getElementById('week-days-cards');
   container.innerHTML = '';
