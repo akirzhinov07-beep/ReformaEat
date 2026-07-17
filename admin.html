@@ -953,12 +953,9 @@ const ING = [
   {id:'микс_сал',  name:'Микс салатов',                cat:'Овощи',             unit:'кг'},
   {id:'кап_кв',    name:'Квашеная капуста',            cat:'Овощи',             unit:'кг'},
   {id:'яблоко',    name:'Яблоко зелёное',              cat:'Фрукты и ягоды',    unit:'кг'},
-  {id:'банан',     name:'Банан',                       cat:'Фрукты и ягоды',    unit:'кг'},
   {id:'лимон',     name:'Лимон',                       cat:'Фрукты и ягоды',    unit:'кг'},
   {id:'ягоды',     name:'Ягоды (черника, малина)',     cat:'Фрукты и ягоды',    unit:'кг'},
   {id:'изюм',      name:'Изюм',                        cat:'Фрукты и ягоды',    unit:'кг'},
-  {id:'чернослив', name:'Чернослив без косточек',      cat:'Фрукты и ягоды',    unit:'кг'},
-  {id:'курага',    name:'Курага',                      cat:'Фрукты и ягоды',    unit:'кг'},
   {id:'орехи',     name:'Грецкие орехи / миндаль',    cat:'Фрукты и ягоды',    unit:'кг'},
   {id:'кукуруза',  name:'Кукуруза конс. без сахара',  cat:'Консервы',          unit:'кг'},
   {id:'горошек',   name:'Горошек зелёный конс.',       cat:'Консервы',          unit:'кг'},
@@ -1005,12 +1002,6 @@ const TC = {
     ing:[{id:'индейка',g:170},{id:'лапша_рис',g:45},{id:'брокколи',g:120},{id:'кабачок',g:90},{id:'морковь',g:70},{id:'лук_кр',g:50},{id:'соус_соев',g:15},{id:'масло_кун',g:5},{id:'масло_раст',g:3}]},
   'У-5':{name:'Куриные котлеты + овощи гриль',cat:'Ужин',
     ing:[{id:'кур_гр',g:260},{id:'яйца',g:55},{id:'лук',g:30},{id:'кабачок',g:140},{id:'баклажан',g:130},{id:'помидор',g:80},{id:'масло_олив',g:10}]},
-  'П-1':{name:'Яблоко + морковные палочки', cat:'Перекус',
-    ing:[{id:'яблоко',g:170},{id:'морковь',g:120}]},
-  'П-2':{name:'Банан',                      cat:'Перекус',
-    ing:[{id:'банан',g:160}]},
-  'П-3':{name:'Сухофрукты + орехи',         cat:'Перекус',
-    ing:[{id:'чернослив',g:15},{id:'курага',g:15},{id:'орехи',g:20}]},
   'Б-1':{name:'Бустер: Бедро + кукуруза',   cat:'Бустер',
     ing:[{id:'кур_бедро',g:195},{id:'кукуруза',g:80},{id:'масло_олив',g:2}]},
   'Б-2':{name:'Бустер: Креветки',            cat:'Бустер',
@@ -1150,7 +1141,7 @@ function updateCostResults() {
 
   // Dish costs
   const dishTbody = document.getElementById('dish-cost-tbody');
-  const catOrder = ['Завтрак','Обед','Ужин','Перекус','Бустер'];
+  const catOrder = ['Завтрак','Обед','Ужин','Бустер'];
   const catKeys = {};
   Object.keys(TC).forEach(k => {
     const c = TC[k].cat;
@@ -1193,8 +1184,7 @@ function updateCostResults() {
   const avgZ = avgCat(catKeys['Завтрак'] || []);
   const avgO = avgCat(catKeys['Обед'] || []);
   const avgU = avgCat(catKeys['Ужин'] || []);
-  const avgP = avgCat(catKeys['Перекус'] || []);
-  const totalIng = avgZ + avgO + avgU + avgP;
+  const totalIng = avgZ + avgO + avgU;
   const totalVar = totalIng + PLATE_COST;
 
   function financeFor(sellPrice) {
@@ -1213,7 +1203,7 @@ function updateCostResults() {
   document.getElementById('finance-cards').innerHTML = ''
     + '<div class="fc-card"><div class="fc-label">Ингредиенты / день (среднее)</div>'
     + '<div class="fc-value">' + (hasTotals ? Math.round(totalIng) : '—') + ' <span class="fc-unit">₽</span></div>'
-    + '<div class="fc-sub">З:' + Math.round(avgZ) + ' О:' + Math.round(avgO) + ' У:' + Math.round(avgU) + ' П:' + Math.round(avgP) + '</div></div>'
+    + '<div class="fc-sub">З:' + Math.round(avgZ) + ' О:' + Math.round(avgO) + ' У:' + Math.round(avgU) + '</div></div>'
 
     + '<div class="fc-card"><div class="fc-label">Переменные затраты / заказ</div>'
     + '<div class="fc-value">' + (hasTotals ? Math.round(totalVar) : '—') + ' <span class="fc-unit">₽</span></div>'
