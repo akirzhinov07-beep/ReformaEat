@@ -131,8 +131,10 @@
   .settings-card { background: #fff; border-radius: 14px; padding: 28px 28px 24px; box-shadow: 0 2px 12px rgba(0,0,0,.06); max-width: 560px; }
   .settings-card p { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.6; }
   .settings-card label { display: block; font-size: 11px; color: #aaa; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
-  .settings-card input[type=url] { width: 100%; padding: 10px 14px; border: 1.5px solid #e0ddd8; border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; background: #faf9f7; }
-  .settings-card input[type=url]:focus { border-color: #ce5b40; }
+  .settings-card input[type=url],
+  .settings-card input[type=password] { width: 100%; padding: 10px 14px; border: 1.5px solid #e0ddd8; border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; background: #faf9f7; }
+  .settings-card input[type=url]:focus,
+  .settings-card input[type=password]:focus { border-color: #ce5b40; }
   .save-btn { margin-top: 14px; padding: 10px 24px; background: #ce5b40; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
   .save-btn:hover { background: #b84e36; }
   .source-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 10px; vertical-align: middle; }
@@ -207,6 +209,27 @@
   .fd-table td{padding:9px 14px;border-bottom:1px solid #f8f6f3}
   .fd-table .fd-hl{background:#f5fdf5}
   .fd-table .fd-hl td{font-weight:700}
+  /* ── OCR SCREENSHOT ── */
+  .screenshot-btn{padding:8px 16px;background:none;border:1.5px solid #ce5b40;color:#ce5b40;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+  .screenshot-btn:hover{background:#ce5b40;color:#fff}
+  .ocr-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .ocr-overlay.show{display:flex}
+  .ocr-modal{background:#fff;border-radius:18px;padding:28px 28px 22px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+  .ocr-modal-title{font-size:16px;font-weight:700;color:#2d2d2d;margin-bottom:6px}
+  .ocr-week-label{font-size:12px;color:#aaa;background:#f5f3ef;border-radius:6px;padding:2px 10px;display:inline-block;margin-bottom:16px}
+  .ocr-loading{text-align:center;padding:32px 0;color:#888;font-size:14px}
+  .ocr-spinner{width:32px;height:32px;border:3px solid #f0ede8;border-top-color:#ce5b40;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ocr-item{display:grid;grid-template-columns:20px 1fr auto auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f3ef;font-size:13px}
+  .ocr-item:last-child{border-bottom:none}
+  .ocr-item-price{color:#aaa;font-size:12px;white-space:nowrap}
+  .ocr-item-calc{color:#ce5b40;font-weight:700;font-size:12px;white-space:nowrap}
+  .ocr-none{text-align:center;padding:24px 0;color:#aaa;font-size:14px;line-height:1.6}
+  .ocr-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #f0ede8}
+  .ocr-apply-btn{padding:9px 22px;background:#ce5b40;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+  .ocr-apply-btn:hover{background:#b84e36}
+  .ocr-cancel-btn{padding:9px 18px;background:none;border:1.5px solid #e0ddd8;border-radius:8px;font-size:14px;color:#888;cursor:pointer;transition:all .2s}
+  .ocr-cancel-btn:hover{border-color:#ce5b40;color:#ce5b40}
   @media (max-width: 600px) {
     .content { padding: 16px 12px; }
     .stat-card { min-width: 130px; padding: 16px 18px; }
@@ -364,6 +387,13 @@
         <button class="save-btn" onclick="saveScriptUrl()">Сохранить</button>
         <div id="script-url-status" style="margin-top:10px;font-size:13px;color:#888;min-height:18px"></div>
       </div>
+      <div class="settings-card" style="margin-top:20px">
+        <p>Ключ Anthropic API нужен для автоматического распознавания цен со скриншотов доставки. Хранится только в вашем браузере.</p>
+        <label for="claude-key-input">Anthropic API Key</label>
+        <input type="password" id="claude-key-input" placeholder="sk-ant-api03-…">
+        <button class="save-btn" onclick="saveClaudeKey()" style="margin-top:10px">Сохранить ключ</button>
+        <div id="claude-key-status" style="margin-top:10px;font-size:13px;color:#888;min-height:18px"></div>
+      </div>
     </div>
 
     <!-- COSTS & PROCUREMENT -->
@@ -371,6 +401,8 @@
       <div class="section-title">Закуп и себестоимость</div>
       <div class="costs-toolbar">
         <button class="add-week-btn" onclick="addPurchaseWeek()">+ Новая неделя закупки</button>
+        <button class="screenshot-btn" onclick="openScreenshotPicker()">📷 Загрузить скриншот</button>
+        <input type="file" id="screenshot-input" accept="image/*" style="display:none" onchange="onScreenshotSelect(event)">
       </div>
       <div id="ing-table-wrap" style="margin-bottom:28px"></div>
       <div id="cost-results-section" style="display:none">
@@ -407,6 +439,19 @@
       <h3>Управление данными</h3>
       <button class="danger-btn" onclick="clearOrders()">Очистить заказы</button>
       <button class="danger-btn" onclick="clearTraining()">Очистить статистику тренировок</button>
+    </div>
+  </div>
+</div>
+
+<!-- OCR OVERLAY -->
+<div id="ocr-overlay" class="ocr-overlay" onclick="closeOcrModal(event)">
+  <div class="ocr-modal" id="ocr-modal">
+    <div class="ocr-modal-title">Распознавание цен</div>
+    <div class="ocr-week-label" id="ocr-week-label"></div>
+    <div id="ocr-body"></div>
+    <div class="ocr-actions">
+      <button class="ocr-cancel-btn" onclick="closeOcrModal()">Отмена</button>
+      <button class="ocr-apply-btn" id="ocr-apply-btn" style="display:none" onclick="applyOcrResults()">Применить цены</button>
     </div>
   </div>
 </div>
@@ -726,6 +771,9 @@ function showTab(name) {
   if (name === 'settings') {
     document.getElementById('script-url-input').value = appsScriptUrl;
     document.getElementById('script-url-status').textContent = '';
+    const savedKey = localStorage.getItem(CLAUDE_KEY_KEY) || '';
+    document.getElementById('claude-key-input').value = savedKey;
+    document.getElementById('claude-key-status').textContent = savedKey ? '✓ Ключ сохранён' : '';
   }
   if (name === 'deliveries') {
     buildDeliveryCalendar();
@@ -1324,6 +1372,186 @@ function updateCostResults() {
     + '<tr class="fd-hl"><td><b>Для +5 000 ₽/день чистыми</b></td>'
     + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f1.target !== null ? f1.target : '∞') + '</td>'
     + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f2.target !== null ? f2.target : '∞') + '</td></tr>';
+}
+
+// ── CLAUDE API KEY ──────────────────────────────────────────────────────────
+const CLAUDE_KEY_KEY = 'rf_claude_key';
+
+function saveClaudeKey() {
+  const val = document.getElementById('claude-key-input').value.trim();
+  localStorage.setItem(CLAUDE_KEY_KEY, val);
+  const st = document.getElementById('claude-key-status');
+  st.style.color = '#2e7d32';
+  st.textContent = val ? '✓ Ключ сохранён' : 'Ключ удалён';
+}
+
+// ── OCR SCREENSHOT ───────────────────────────────────────────────────────────
+let _ocrPendingResults = null; // [{ingId, name, paid, grams, pricePerUnit}]
+
+function openScreenshotPicker() {
+  const key = localStorage.getItem(CLAUDE_KEY_KEY) || '';
+  if (!key) {
+    alert('Сначала введите Anthropic API Key в разделе «Настройки».');
+    return;
+  }
+  const data = getPurchaseData();
+  if (!data.weeks || !data.weeks.length) {
+    alert('Сначала создайте хотя бы одну неделю закупки.');
+    return;
+  }
+  document.getElementById('screenshot-input').value = '';
+  document.getElementById('screenshot-input').click();
+}
+
+function onScreenshotSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const data = getPurchaseData();
+  const weekStr = data.weeks[data.weeks.length - 1];
+  // Show modal in loading state
+  const overlay = document.getElementById('ocr-overlay');
+  document.getElementById('ocr-week-label').textContent = 'Неделя ' + weekStr;
+  document.getElementById('ocr-body').innerHTML =
+    '<div class="ocr-loading"><div class="ocr-spinner"></div>Распознаю цены…</div>';
+  document.getElementById('ocr-apply-btn').style.display = 'none';
+  overlay.classList.add('show');
+  // Read file as base64
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result; // data:image/jpeg;base64,....
+    const comma = dataUrl.indexOf(',');
+    const base64 = dataUrl.substring(comma + 1);
+    const mimeType = dataUrl.substring(5, comma).split(';')[0];
+    parseScreenshotWithClaude(base64, mimeType, weekStr);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function parseScreenshotWithClaude(base64, mimeType, weekStr) {
+  const apiKey = localStorage.getItem(CLAUDE_KEY_KEY) || '';
+  // Build ingredient list for the prompt
+  const ingList = ING.map(i => i.id + ' | ' + i.name + ' | ' + i.unit + (i.gpx ? ' (gpx:' + i.gpx + ')' : '')).join('\n');
+  const prompt =
+    'Ты помощник, анализирующий скриншоты приложений доставки продуктов (например, ВкусВилл, Самокат, Яндекс Лавка).\n' +
+    'На скриншоте видны товары с ценами и граммовкой. Найди все товары, которые соответствуют ингредиентам из списка ниже.\n\n' +
+    'Список ингредиентов (id | название | единица):\n' + ingList + '\n\n' +
+    'Верни JSON-массив объектов. Каждый объект:\n' +
+    '{"ingId":"...", "name":"...","paid":число,"grams":число}\n' +
+    'paid — цена в рублях (без копеек), grams — вес/количество в граммах (или штуках/пучках — то что написано).\n' +
+    'Если единица кг — переведи в граммы (например 1.5 кг → 1500 г). Если шт или пучок — поставь реальное количество (штук/пучков в упаковке).\n' +
+    'Возвращай ТОЛЬКО JSON-массив, без пояснений.';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error('API error ' + resp.status + ': ' + err);
+    }
+    const json = await resp.json();
+    const text = json.content[0].text.trim();
+    // Parse JSON from response (may be wrapped in ```json ... ```)
+    const match = text.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Не удалось разобрать ответ API');
+    const items = JSON.parse(match[0]);
+    renderOcrResults(items, weekStr);
+  } catch (e) {
+    document.getElementById('ocr-body').innerHTML =
+      '<div class="ocr-none">Ошибка: ' + e.message + '</div>';
+  }
+}
+
+function renderOcrResults(items, weekStr) {
+  _ocrPendingResults = [];
+  if (!items || !items.length) {
+    document.getElementById('ocr-body').innerHTML =
+      '<div class="ocr-none">Ничего не распознано.<br>Попробуйте другой скриншот или введите цены вручную.</div>';
+    return;
+  }
+  let html = '<div>';
+  let found = 0;
+  items.forEach(function(item) {
+    const ing = ingById(item.ingId);
+    if (!ing) return;
+    const paid = parseFloat(item.paid);
+    const grams = parseFloat(item.grams);
+    if (isNaN(paid) || paid <= 0 || isNaN(grams) || grams <= 0) return;
+    let ppu, ppuLabel;
+    if (ing.unit === 'шт' || ing.unit === 'пучок') {
+      ppu = paid * (ing.gpx / grams);
+      ppuLabel = '= ' + ppu.toFixed(1) + ' ₽/' + ing.unit;
+    } else {
+      ppu = paid / grams * 1000;
+      ppuLabel = '= ' + ppu.toFixed(1) + ' ₽/кг';
+    }
+    _ocrPendingResults.push({ ingId: item.ingId, paid: paid, grams: grams, ppu: ppu });
+    html += '<div class="ocr-item">'
+      + '<input type="checkbox" class="ocr-chk" data-idx="' + (found) + '" checked>'
+      + '<span>' + ing.name + '</span>'
+      + '<span class="ocr-item-price">' + paid + ' ₽ / ' + grams + (ing.unit === 'шт' ? ' шт' : ing.unit === 'пучок' ? ' пуч' : ' г') + '</span>'
+      + '<span class="ocr-item-calc">' + ppuLabel + '</span>'
+      + '</div>';
+    found++;
+  });
+  html += '</div>';
+  if (!found) {
+    document.getElementById('ocr-body').innerHTML =
+      '<div class="ocr-none">Ни один ингредиент не совпал с нашим списком.</div>';
+    return;
+  }
+  document.getElementById('ocr-body').innerHTML = html;
+  document.getElementById('ocr-apply-btn').style.display = '';
+}
+
+function applyOcrResults() {
+  if (!_ocrPendingResults || !_ocrPendingResults.length) return;
+  const data = getPurchaseData();
+  const weekStr = data.weeks[data.weeks.length - 1];
+  // Find which items are checked
+  const checkboxes = document.querySelectorAll('.ocr-chk');
+  checkboxes.forEach(function(chk) {
+    if (!chk.checked) return;
+    const idx = parseInt(chk.getAttribute('data-idx'));
+    const item = _ocrPendingResults[idx];
+    if (!item) return;
+    // Switch to pkg mode
+    if (!data.ingModes) data.ingModes = {};
+    data.ingModes[item.ingId] = 'pkg';
+    // Save pkg inputs
+    if (!data.pkgInputs) data.pkgInputs = {};
+    if (!data.pkgInputs[weekStr]) data.pkgInputs[weekStr] = {};
+    data.pkgInputs[weekStr][item.ingId] = { paid: String(item.paid), grams: String(item.grams) };
+    // Save computed price
+    if (!data.prices) data.prices = {};
+    if (!data.prices[weekStr]) data.prices[weekStr] = {};
+    data.prices[weekStr][item.ingId] = Math.round(item.ppu * 100) / 100;
+  });
+  savePurchaseData(data);
+  closeOcrModal();
+  renderPurchaseTab();
+}
+
+function closeOcrModal(event) {
+  if (event && event.target !== document.getElementById('ocr-overlay')) return;
+  document.getElementById('ocr-overlay').classList.remove('show');
+  _ocrPendingResults = null;
 }
 
 // Auto-login if session exists
