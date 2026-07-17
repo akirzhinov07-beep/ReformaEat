@@ -169,6 +169,39 @@
   .cal-no-dishes { font-size:12px; color:#bbb; font-style:italic; }
   .cal-comment { font-size:12px; color:#888; margin-top:8px; border-top:1px solid #f0ede8; padding-top:6px; }
 
+  /* ── ЗАКУП И СЕБЕСТОИМОСТЬ ── */
+  .costs-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .add-week-btn{padding:8px 18px;background:#ce5b40;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+  .add-week-btn:hover{background:#b84e36}
+  .week-del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;vertical-align:middle}
+  .week-del-btn:hover{color:#ce5b40}
+  .ing-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  .ing-table th{background:#faf9f7;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#999;border-bottom:1px solid #f0ede8;white-space:nowrap}
+  .ing-table td{padding:7px 12px;border-bottom:1px solid #f8f6f3;vertical-align:middle}
+  .ing-table .ing-cat-row td{background:#fdf6f5;font-size:11px;font-weight:700;color:#ce5b40;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px 4px}
+  .ing-table .week-th{text-align:center;min-width:88px}
+  .price-inp{width:78px;text-align:right;border:1px solid #e0ddd8;border-radius:6px;padding:4px 7px;font-size:13px;outline:none;transition:border .15s;background:#fff}
+  .price-inp:focus{border-color:#ce5b40}
+  .unit-cell{color:#aaa;font-size:11px;white-space:nowrap}
+  .dc-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  .dc-table th{background:#faf9f7;padding:9px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#999;border-bottom:1px solid #f0ede8;white-space:nowrap}
+  .dc-table td{padding:8px 14px;border-bottom:1px solid #f8f6f3;vertical-align:middle}
+  .dc-table .dc-cat-row td{background:#faf9f7;font-size:11px;font-weight:700;color:#ce5b40;text-transform:uppercase;letter-spacing:.04em}
+  .dc-val{font-weight:700;color:#2d2d2d}
+  .dc-missing{color:#aaa;font-style:italic;font-size:12px}
+  .dc-warn{color:#e6950a;font-size:11px}
+  .fc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+  .fc-card{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  .fc-label{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .fc-value{font-size:26px;font-weight:700;color:#ce5b40;line-height:1.1}
+  .fc-value.green{color:#2e7d32}
+  .fc-sub{font-size:11px;color:#bbb;margin-top:5px;line-height:1.4}
+  .fc-unit{font-size:14px;font-weight:400}
+  .fd-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  .fd-table th{background:#faf9f7;padding:9px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#999;border-bottom:1px solid #f0ede8}
+  .fd-table td{padding:9px 14px;border-bottom:1px solid #f8f6f3}
+  .fd-table .fd-hl{background:#f5fdf5}
+  .fd-table .fd-hl td{font-weight:700}
   @media (max-width: 600px) {
     .content { padding: 16px 12px; }
     .stat-card { min-width: 130px; padding: 16px 18px; }
@@ -231,6 +264,7 @@
       <button class="tab-btn" onclick="showTab('deliveries')">Доставки</button>
       <button class="tab-btn" onclick="showTab('training')">Статистика тренировок</button>
       <button class="tab-btn" onclick="showTab('settings')">Настройки</button>
+      <button class="tab-btn" onclick="showTab('costs')">Закуп и себестоимость</button>
     </div>
 
     <!-- ORDERS -->
@@ -324,6 +358,42 @@
         <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec">
         <button class="save-btn" onclick="saveScriptUrl()">Сохранить</button>
         <div id="script-url-status" style="margin-top:10px;font-size:13px;color:#888;min-height:18px"></div>
+      </div>
+    </div>
+
+    <!-- COSTS & PROCUREMENT -->
+    <div id="tab-costs" class="section">
+      <div class="section-title">Закуп и себестоимость</div>
+      <div class="costs-toolbar">
+        <button class="add-week-btn" onclick="addPurchaseWeek()">+ Новая неделя закупки</button>
+      </div>
+      <div id="ing-table-wrap" style="margin-bottom:28px"></div>
+      <div id="cost-results-section" style="display:none">
+        <div class="section-title" style="font-size:14px;margin-top:4px">Себестоимость блюд <span style="font-size:12px;color:#aaa;font-weight:400">(по ценам последней недели)</span></div>
+        <div class="table-wrap" style="margin-bottom:28px">
+          <table class="dc-table">
+            <thead><tr>
+              <th>Код</th><th>Блюдо</th>
+              <th style="text-align:right">Ингредиенты</th>
+              <th style="text-align:right">Посуда</th>
+              <th style="text-align:right">Итого</th>
+              <th>⚠ Нет цены</th>
+            </tr></thead>
+            <tbody id="dish-cost-tbody"></tbody>
+          </table>
+        </div>
+        <div class="section-title" style="font-size:14px">Финансовый расчёт</div>
+        <div class="fc-grid" id="finance-cards"></div>
+        <div class="table-wrap" style="margin-bottom:24px">
+          <table class="fd-table">
+            <thead><tr>
+              <th>Показатель</th>
+              <th style="text-align:right">Рацион 1 390 ₽</th>
+              <th style="text-align:right">Рацион 1 520 ₽</th>
+            </tr></thead>
+            <tbody id="finance-detail-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -655,6 +725,9 @@ function showTab(name) {
   if (name === 'deliveries') {
     buildDeliveryCalendar();
   }
+  if (name === 'costs') {
+    renderPurchaseTab();
+  }
 }
 
 function clearOrders() {
@@ -826,6 +899,361 @@ function buildDeliveryCalendar() {
     html += `</div>`;
   }
   body.innerHTML = html;
+}
+
+// ─── ЗАКУП И СЕБЕСТОИМОСТЬ ────────────────────────────────────────────────
+
+const PURCHASE_KEY = 'rf_purchase_v1';
+const PLATE_COST   = 100;
+const IP_TAX_RATE  = 0.06;
+const CHEF_SALARY  = 2000;
+const NET_TARGET   = 5000;
+const PRICE_1600   = 1390;
+const PRICE_2000   = 1520;
+
+const ING = [
+  {id:'яйца',      name:'Яйца куриные (С1)',           cat:'Молочное и яйца',   unit:'шт', gpx:55},
+  {id:'творог',    name:'Творог 5%',                   cat:'Молочное и яйца',   unit:'кг'},
+  {id:'сметана',   name:'Сметана 10%',                 cat:'Молочное и яйца',   unit:'кг'},
+  {id:'йогурт',    name:'Греческий йогурт 2%',         cat:'Молочное и яйца',   unit:'кг'},
+  {id:'сыр_тв',    name:'Сыр твёрдый (гауда)',         cat:'Молочное и яйца',   unit:'кг'},
+  {id:'сыр_адыг',  name:'Адыгейский сыр',              cat:'Молочное и яйца',   unit:'кг'},
+  {id:'кур_гр',    name:'Грудь куриная на кости',      cat:'Мясо и птица',      unit:'кг'},
+  {id:'кур_бедро', name:'Бедро куриное на кости',      cat:'Мясо и птица',      unit:'кг'},
+  {id:'индейка',   name:'Филе индейки',                cat:'Мясо и птица',      unit:'кг'},
+  {id:'говядина',  name:'Говядина мякоть',             cat:'Мясо и птица',      unit:'кг'},
+  {id:'сосиска',   name:'Сосиска халяльная',           cat:'Мясо и птица',      unit:'кг'},
+  {id:'форель',    name:'Форель (филе, охл.)',          cat:'Рыба и море',       unit:'кг'},
+  {id:'треска',    name:'Треска / хек (филе)',          cat:'Рыба и море',       unit:'кг'},
+  {id:'креветки',  name:'Креветки очищ. (с/м)',        cat:'Рыба и море',       unit:'кг'},
+  {id:'паста',     name:'Паста пенне (тв. сорт)',      cat:'Крупы и макароны',  unit:'кг'},
+  {id:'рис',       name:'Рис белый (сухой)',            cat:'Крупы и макароны',  unit:'кг'},
+  {id:'гречка',    name:'Гречка (сухая)',               cat:'Крупы и макароны',  unit:'кг'},
+  {id:'булгур',    name:'Булгур (сухой)',               cat:'Крупы и макароны',  unit:'кг'},
+  {id:'лапша_рис', name:'Лапша рисовая (сухая)',       cat:'Крупы и макароны',  unit:'кг'},
+  {id:'мука_рис',  name:'Мука рисовая',                cat:'Крупы и макароны',  unit:'кг'},
+  {id:'мука_цз',   name:'Мука цельнозерновая',         cat:'Крупы и макароны',  unit:'кг'},
+  {id:'мука_пш',   name:'Мука пшеничная',              cat:'Крупы и макароны',  unit:'кг'},
+  {id:'гранола',   name:'Гранола без сахара',          cat:'Крупы и макароны',  unit:'кг'},
+  {id:'лук',       name:'Лук репчатый',                cat:'Овощи',             unit:'кг'},
+  {id:'лук_кр',    name:'Лук красный',                 cat:'Овощи',             unit:'кг'},
+  {id:'лук_зел',   name:'Зелёный лук',                 cat:'Овощи',             unit:'кг'},
+  {id:'морковь',   name:'Морковь',                     cat:'Овощи',             unit:'кг'},
+  {id:'картофель', name:'Картофель',                   cat:'Овощи',             unit:'кг'},
+  {id:'свекла',    name:'Свёкла',                      cat:'Овощи',             unit:'кг'},
+  {id:'капуста',   name:'Капуста белокочанная',        cat:'Овощи',             unit:'кг'},
+  {id:'кабачок',   name:'Кабачок / цукини',            cat:'Овощи',             unit:'кг'},
+  {id:'баклажан',  name:'Баклажан',                    cat:'Овощи',             unit:'кг'},
+  {id:'брокколи',  name:'Брокколи',                    cat:'Овощи',             unit:'кг'},
+  {id:'помидор',   name:'Помидоры / черри',            cat:'Овощи',             unit:'кг'},
+  {id:'огурец',    name:'Огурец',                      cat:'Овощи',             unit:'кг'},
+  {id:'сельдерей', name:'Стебель сельдерея',           cat:'Овощи',             unit:'кг'},
+  {id:'чеснок',    name:'Чеснок',                      cat:'Овощи',             unit:'кг'},
+  {id:'зелень',    name:'Зелень (укроп, петрушка)',    cat:'Овощи',             unit:'кг'},
+  {id:'микс_сал',  name:'Микс салатов',                cat:'Овощи',             unit:'кг'},
+  {id:'кап_кв',    name:'Квашеная капуста',            cat:'Овощи',             unit:'кг'},
+  {id:'яблоко',    name:'Яблоко зелёное',              cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'банан',     name:'Банан',                       cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'лимон',     name:'Лимон',                       cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'ягоды',     name:'Ягоды (черника, малина)',     cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'изюм',      name:'Изюм',                        cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'чернослив', name:'Чернослив без косточек',      cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'курага',    name:'Курага',                      cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'орехи',     name:'Грецкие орехи / миндаль',    cat:'Фрукты и ягоды',    unit:'кг'},
+  {id:'кукуруза',  name:'Кукуруза конс. без сахара',  cat:'Консервы',          unit:'кг'},
+  {id:'горошек',   name:'Горошек зелёный конс.',       cat:'Консервы',          unit:'кг'},
+  {id:'томаты_сок',name:'Томаты в собственном соку',  cat:'Консервы',          unit:'кг'},
+  {id:'мед',       name:'Мёд',                         cat:'Прочее',            unit:'кг'},
+  {id:'хлеб_цз',   name:'Хлеб цельнозерновой',        cat:'Хлеб',              unit:'кг'},
+  {id:'хлеб_рж',   name:'Хлеб ржаной',                cat:'Хлеб',              unit:'кг'},
+  {id:'лаваш',     name:'Лаваш тонкий ц/з',           cat:'Хлеб',              unit:'шт', gpx:60},
+  {id:'масло_олив',name:'Масло оливковое',             cat:'Масла',             unit:'кг'},
+  {id:'масло_раст',name:'Масло растительное',          cat:'Масла',             unit:'кг'},
+  {id:'масло_кун', name:'Масло кунжутное',             cat:'Масла',             unit:'кг'},
+  {id:'соус_соев', name:'Соус соевый (light)',         cat:'Соусы',             unit:'кг'},
+  {id:'томат_паст',name:'Томатная паста',              cat:'Соусы',             unit:'кг'},
+];
+
+const TC = {
+  'З-1':{name:'Турецкий завтрак',          cat:'Завтрак',
+    ing:[{id:'яйца',g:110},{id:'сосиска',g:60},{id:'сыр_тв',g:30},{id:'огурец',g:100},{id:'хлеб_цз',g:30},{id:'зелень',g:10}]},
+  'З-2':{name:'ПП хачапури',               cat:'Завтрак',
+    ing:[{id:'творог',g:150},{id:'яйца',g:110},{id:'мука_рис',g:25},{id:'сыр_адыг',g:45},{id:'лук_зел',g:20},{id:'зелень',g:10},{id:'масло_раст',g:3}]},
+  'З-3':{name:'Сырники со сметаной',        cat:'Завтрак',
+    ing:[{id:'творог',g:200},{id:'яйца',g:55},{id:'мука_рис',g:30},{id:'масло_раст',g:5},{id:'сметана',g:30},{id:'ягоды',g:60}]},
+  'З-4':{name:'Гранола с йогуртом',         cat:'Завтрак',
+    ing:[{id:'йогурт',g:180},{id:'гранола',g:40},{id:'орехи',g:15},{id:'мед',g:8}]},
+  'З-5':{name:'Кабачковые вафли',           cat:'Завтрак',
+    ing:[{id:'кабачок',g:260},{id:'яйца',g:110},{id:'мука_цз',g:30},{id:'сыр_тв',g:20},{id:'йогурт',g:40},{id:'масло_раст',g:3},{id:'зелень',g:8}]},
+  'О-1':{name:'Паста болоньеза',            cat:'Обед',
+    ing:[{id:'паста',g:70},{id:'говядина',g:120},{id:'томаты_сок',g:120},{id:'лук',g:60},{id:'морковь',g:50},{id:'сельдерей',g:30},{id:'томат_паст',g:10},{id:'масло_олив',g:11},{id:'сыр_тв',g:10},{id:'микс_сал',g:50}]},
+  'О-2':{name:'Котлеты куриные с рисом',    cat:'Обед',
+    ing:[{id:'кур_гр',g:250},{id:'лук',g:30},{id:'яйца',g:55},{id:'рис',g:70},{id:'огурец',g:90},{id:'помидор',g:70},{id:'зелень',g:15},{id:'масло_олив',g:5}]},
+  'О-3':{name:'Форель с гречкой',           cat:'Обед',
+    ing:[{id:'форель',g:160},{id:'гречка',g:65},{id:'кукуруза',g:40},{id:'горошек',g:40},{id:'брокколи',g:90},{id:'масло_олив',g:5},{id:'лимон',g:15},{id:'зелень',g:5}]},
+  'О-4':{name:'Борщ со сметаной',           cat:'Обед',
+    ing:[{id:'говядина',g:100},{id:'свекла',g:90},{id:'капуста',g:100},{id:'картофель',g:80},{id:'морковь',g:60},{id:'лук',g:50},{id:'томат_паст',g:12},{id:'масло_раст',g:5},{id:'сметана',g:20},{id:'хлеб_рж',g:30}]},
+  'О-5':{name:'Куриный стейк с булгуром',   cat:'Обед',
+    ing:[{id:'кур_гр',g:230},{id:'булгур',g:60},{id:'морковь',g:90},{id:'яблоко',g:100},{id:'изюм',g:10},{id:'мед',g:5},{id:'масло_олив',g:8}]},
+  'У-1':{name:'Белая рыба с картофелем',    cat:'Ужин',
+    ing:[{id:'треска',g:200},{id:'картофель',g:150},{id:'горошек',g:80},{id:'кап_кв',g:60},{id:'масло_олив',g:8},{id:'лимон',g:20},{id:'зелень',g:8}]},
+  'У-2':{name:'Бефстроганов с гречкой',     cat:'Ужин',
+    ing:[{id:'говядина',g:190},{id:'гречка',g:65},{id:'сметана',g:40},{id:'лук',g:70},{id:'томат_паст',g:8},{id:'мука_пш',g:5},{id:'масло_раст',g:8},{id:'зелень',g:5}]},
+  'У-3':{name:'ПП шаурма с курицей',        cat:'Ужин',
+    ing:[{id:'кур_гр',g:200},{id:'лаваш',g:60},{id:'капуста',g:70},{id:'огурец',g:60},{id:'помидор',g:80},{id:'йогурт',g:50},{id:'масло_олив',g:5}]},
+  'У-4':{name:'ПП вок с индейкой',          cat:'Ужин',
+    ing:[{id:'индейка',g:170},{id:'лапша_рис',g:45},{id:'брокколи',g:120},{id:'кабачок',g:90},{id:'морковь',g:70},{id:'лук_кр',g:50},{id:'соус_соев',g:15},{id:'масло_кун',g:5},{id:'масло_раст',g:3}]},
+  'У-5':{name:'Куриные котлеты + овощи гриль',cat:'Ужин',
+    ing:[{id:'кур_гр',g:260},{id:'яйца',g:55},{id:'лук',g:30},{id:'кабачок',g:140},{id:'баклажан',g:130},{id:'помидор',g:80},{id:'масло_олив',g:10}]},
+  'П-1':{name:'Яблоко + морковные палочки', cat:'Перекус',
+    ing:[{id:'яблоко',g:170},{id:'морковь',g:120}]},
+  'П-2':{name:'Банан',                      cat:'Перекус',
+    ing:[{id:'банан',g:160}]},
+  'П-3':{name:'Сухофрукты + орехи',         cat:'Перекус',
+    ing:[{id:'чернослив',g:15},{id:'курага',g:15},{id:'орехи',g:20}]},
+  'Б-1':{name:'Бустер: Бедро + кукуруза',   cat:'Бустер',
+    ing:[{id:'кур_бедро',g:195},{id:'кукуруза',g:80},{id:'масло_олив',g:2}]},
+  'Б-2':{name:'Бустер: Креветки',            cat:'Бустер',
+    ing:[{id:'креветки',g:120}]},
+  'Б-3':{name:'Бустер: Яйца + горошек',      cat:'Бустер',
+    ing:[{id:'яйца',g:110},{id:'горошек',g:80}]},
+  'Б-4':{name:'Бустер: Форель + горошек',    cat:'Бустер',
+    ing:[{id:'форель',g:135},{id:'горошек',g:80},{id:'масло_олив',g:2}]},
+};
+
+function getPurchaseData() {
+  try { return JSON.parse(localStorage.getItem(PURCHASE_KEY) || 'null') || {weeks:[],prices:{}}; }
+  catch(e) { return {weeks:[],prices:{}}; }
+}
+function savePurchaseData(d) { localStorage.setItem(PURCHASE_KEY, JSON.stringify(d)); }
+function ingById(id) { return ING.find(i => i.id === id); }
+
+function calcIngCost(ingId, grams, priceMap) {
+  const ing = ingById(ingId);
+  const p = parseFloat(priceMap[ingId]);
+  if (!ing || !p || p <= 0) return null;
+  if (ing.unit === 'шт') return Math.max(1, Math.round(grams / ing.gpx)) * p;
+  return (grams / 1000) * p;
+}
+
+function calcDishCost(dishKey, priceMap) {
+  const dish = TC[dishKey];
+  let total = 0, missing = [];
+  dish.ing.forEach(item => {
+    const c = calcIngCost(item.id, item.g, priceMap);
+    if (c === null) { const ing = ingById(item.id); missing.push(ing ? ing.name : item.id); }
+    else total += c;
+  });
+  return { cost: Math.round(total * 10) / 10, missing };
+}
+
+function fmtWeek(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  return d + '.' + m + '.' + y.slice(2);
+}
+
+function addPurchaseWeek() {
+  const today = new Date();
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  const def = monday.toISOString().slice(0, 10);
+  const input = prompt('Дата закупки (ГГГГ-ММ-ДД):', def);
+  if (input === null) return;
+  const dateStr = input.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { alert('Формат: ГГГГ-ММ-ДД'); return; }
+  const data = getPurchaseData();
+  if (!data.weeks.includes(dateStr)) { data.weeks.push(dateStr); data.weeks.sort(); }
+  savePurchaseData(data);
+  renderPurchaseTab();
+}
+
+function deleteWeek(weekStr) {
+  if (!confirm('Удалить неделю ' + fmtWeek(weekStr) + ' со всеми ценами?')) return;
+  const data = getPurchaseData();
+  data.weeks = data.weeks.filter(w => w !== weekStr);
+  delete data.prices[weekStr];
+  savePurchaseData(data);
+  renderPurchaseTab();
+}
+
+function savePriceCell(weekStr, ingId, val) {
+  const data = getPurchaseData();
+  if (!data.prices[weekStr]) data.prices[weekStr] = {};
+  const n = parseFloat(val);
+  if (!isNaN(n) && n > 0) data.prices[weekStr][ingId] = n;
+  else delete data.prices[weekStr][ingId];
+  savePurchaseData(data);
+  updateCostResults();
+}
+
+function renderPurchaseTab() {
+  const data = getPurchaseData();
+  const weeks = data.weeks;
+  const wrap = document.getElementById('ing-table-wrap');
+  if (!wrap) return;
+
+  if (weeks.length === 0) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>Нажмите «+ Новая неделя закупки» чтобы начать вводить цены</div>';
+    const rs = document.getElementById('cost-results-section');
+    if (rs) rs.style.display = 'none';
+    return;
+  }
+
+  // Group ING by category
+  const catOrder = [];
+  const catMap = {};
+  ING.forEach(ing => {
+    if (!catMap[ing.cat]) { catMap[ing.cat] = []; catOrder.push(ing.cat); }
+    catMap[ing.cat].push(ing);
+  });
+
+  let html = '<div class="table-wrap"><table class="ing-table"><thead><tr>';
+  html += '<th>Ингредиент</th><th style="white-space:nowrap">Ед. цены</th>';
+  weeks.forEach(w => {
+    html += '<th class="week-th">нед. ' + fmtWeek(w) + '<br>'
+      + '<button class="week-del-btn" onclick="deleteWeek(\'' + w + '\')" title="Удалить">✕</button></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  catOrder.forEach(cat => {
+    html += '<tr class="ing-cat-row"><td colspan="' + (2 + weeks.length) + '">' + esc(cat) + '</td></tr>';
+    catMap[cat].forEach(ing => {
+      const unitLabel = '₽/' + ing.unit;
+      html += '<tr><td>' + esc(ing.name) + '</td><td class="unit-cell">' + unitLabel + '</td>';
+      weeks.forEach(w => {
+        const price = (data.prices[w] && data.prices[w][ing.id]) ? data.prices[w][ing.id] : '';
+        html += '<td><input class="price-inp" type="number" min="0" step="1" placeholder="—" value="' + price + '"'
+          + ' oninput="savePriceCell(\'' + w + '\',\'' + ing.id + '\',this.value)"></td>';
+      });
+      html += '</tr>';
+    });
+  });
+
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+  updateCostResults();
+}
+
+function updateCostResults() {
+  const data = getPurchaseData();
+  const rs = document.getElementById('cost-results-section');
+  if (!rs) return;
+  if (data.weeks.length === 0) { rs.style.display = 'none'; return; }
+
+  const lastWeek = data.weeks[data.weeks.length - 1];
+  const priceMap = data.prices[lastWeek] || {};
+  const hasAny = Object.values(priceMap).some(v => v > 0);
+  if (!hasAny) { rs.style.display = 'none'; return; }
+  rs.style.display = '';
+
+  // Dish costs
+  const dishTbody = document.getElementById('dish-cost-tbody');
+  const catOrder = ['Завтрак','Обед','Ужин','Перекус','Бустер'];
+  const catKeys = {};
+  Object.keys(TC).forEach(k => {
+    const c = TC[k].cat;
+    if (!catKeys[c]) catKeys[c] = [];
+    catKeys[c].push(k);
+  });
+
+  const allCosts = {};
+  let dishHTML = '';
+
+  catOrder.forEach(cat => {
+    const keys = catKeys[cat] || [];
+    if (!keys.length) return;
+    dishHTML += '<tr class="dc-cat-row"><td colspan="6">' + cat + '</td></tr>';
+    keys.forEach(k => {
+      const dish = TC[k];
+      const { cost, missing } = calcDishCost(k, priceMap);
+      allCosts[k] = { cost, missing };
+      const hasData = cost > 0;
+      const total = hasData ? (cost + PLATE_COST).toFixed(1) + ' ₽' : '—';
+      const ingStr = hasData ? cost.toFixed(1) + ' ₽' : '—';
+      const warnStr = missing.length ? '⚠ ' + esc(missing.slice(0,2).join(', ')) + (missing.length > 2 ? ' +' + (missing.length-2) : '') : '';
+      dishHTML += '<tr>'
+        + '<td style="color:#aaa;font-size:12px">' + k + '</td>'
+        + '<td>' + esc(dish.name) + '</td>'
+        + '<td style="text-align:right" class="' + (hasData ? 'dc-val' : 'dc-missing') + '">' + ingStr + '</td>'
+        + '<td style="text-align:right;color:#aaa;font-size:12px">' + (hasData ? '+' + PLATE_COST + ' ₽' : '—') + '</td>'
+        + '<td style="text-align:right" class="' + (hasData ? 'dc-val' : 'dc-missing') + '">' + total + '</td>'
+        + '<td class="dc-warn">' + warnStr + '</td>'
+        + '</tr>';
+    });
+  });
+  dishTbody.innerHTML = dishHTML;
+
+  // Averages per category
+  function avgCat(keys) {
+    const vals = keys.map(k => allCosts[k] ? allCosts[k].cost : 0).filter(v => v > 0);
+    return vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : 0;
+  }
+  const avgZ = avgCat(catKeys['Завтрак'] || []);
+  const avgO = avgCat(catKeys['Обед'] || []);
+  const avgU = avgCat(catKeys['Ужин'] || []);
+  const avgP = avgCat(catKeys['Перекус'] || []);
+  const totalIng = avgZ + avgO + avgU + avgP;
+  const totalVar = totalIng + PLATE_COST;
+
+  function financeFor(sellPrice) {
+    const tax = sellPrice * IP_TAX_RATE;
+    const netRev = sellPrice - tax;
+    const contrib = netRev - totalVar;
+    const breakeven = contrib > 0 ? Math.ceil(CHEF_SALARY / contrib) : null;
+    const target = contrib > 0 ? Math.ceil((CHEF_SALARY + NET_TARGET) / contrib) : null;
+    return { tax, netRev, contrib, breakeven, target };
+  }
+  const f1 = financeFor(PRICE_1600);
+  const f2 = financeFor(PRICE_2000);
+
+  // Summary cards
+  const hasTotals = totalIng > 0;
+  document.getElementById('finance-cards').innerHTML = ''
+    + '<div class="fc-card"><div class="fc-label">Ингредиенты / день (среднее)</div>'
+    + '<div class="fc-value">' + (hasTotals ? Math.round(totalIng) : '—') + ' <span class="fc-unit">₽</span></div>'
+    + '<div class="fc-sub">З:' + Math.round(avgZ) + ' О:' + Math.round(avgO) + ' У:' + Math.round(avgU) + ' П:' + Math.round(avgP) + '</div></div>'
+
+    + '<div class="fc-card"><div class="fc-label">Переменные затраты / заказ</div>'
+    + '<div class="fc-value">' + (hasTotals ? Math.round(totalVar) : '—') + ' <span class="fc-unit">₽</span></div>'
+    + '<div class="fc-sub">ингредиенты + посуда ' + PLATE_COST + ' ₽</div></div>'
+
+    + '<div class="fc-card"><div class="fc-label">Безубыточность (рацион 1 390 ₽)</div>'
+    + '<div class="fc-value">' + (f1.breakeven !== null ? f1.breakeven : '∞') + ' <span class="fc-unit">зак/день</span></div>'
+    + '<div class="fc-sub">покрывает зарплату повара ' + CHEF_SALARY.toLocaleString('ru') + ' ₽/день</div></div>'
+
+    + '<div class="fc-card"><div class="fc-label">Цель +5 000 ₽/день (рацион 1 390 ₽)</div>'
+    + '<div class="fc-value green">' + (f1.target !== null ? f1.target : '∞') + ' <span class="fc-unit">зак/день</span></div>'
+    + '<div class="fc-sub">чистая прибыль после всех затрат</div></div>';
+
+  // Detail table
+  function tr(label, v1, v2, hl, sign) {
+    const s = sign || '';
+    const fmt = v => v !== null ? s + Math.round(v).toLocaleString('ru') + ' ₽' : '—';
+    const cls = hl ? ' class="fd-hl"' : '';
+    return '<tr' + cls + '><td>' + label + '</td>'
+      + '<td style="text-align:right">' + fmt(v1) + '</td>'
+      + '<td style="text-align:right">' + fmt(v2) + '</td></tr>';
+  }
+  document.getElementById('finance-detail-tbody').innerHTML = ''
+    + tr('Цена продажи', PRICE_1600, PRICE_2000)
+    + tr('— налог ИП 6%', f1.tax, f2.tax, false, '−')
+    + tr('Выручка после налога', f1.netRev, f2.netRev, true)
+    + tr('— ингредиенты (среднее)', totalIng, totalIng, false, '−')
+    + tr('— посуда/упаковка', PLATE_COST, PLATE_COST, false, '−')
+    + '<tr class="fd-hl"><td><b>Вклад покрытия (на 1 заказ)</b></td>'
+    + '<td style="text-align:right;font-weight:700;color:' + (f1.contrib>0?'#2e7d32':'#ce5b40') + '">'
+    + Math.round(f1.contrib).toLocaleString('ru') + ' ₽</td>'
+    + '<td style="text-align:right;font-weight:700;color:' + (f2.contrib>0?'#2e7d32':'#ce5b40') + '">'
+    + Math.round(f2.contrib).toLocaleString('ru') + ' ₽</td></tr>'
+    + tr('— зарплата повара/день', CHEF_SALARY, CHEF_SALARY, false, '−')
+    + '<tr class="fd-hl"><td><b>Безубыточность (заказов/день)</b></td>'
+    + '<td style="text-align:right;font-weight:700;color:#ce5b40">' + (f1.breakeven !== null ? f1.breakeven : '∞') + '</td>'
+    + '<td style="text-align:right;font-weight:700;color:#ce5b40">' + (f2.breakeven !== null ? f2.breakeven : '∞') + '</td></tr>'
+    + '<tr class="fd-hl"><td><b>Для +5 000 ₽/день чистыми</b></td>'
+    + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f1.target !== null ? f1.target : '∞') + '</td>'
+    + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f2.target !== null ? f2.target : '∞') + '</td></tr>';
 }
 
 // Auto-login if session exists
