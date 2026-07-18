@@ -182,6 +182,9 @@
   .pkg-inputs{min-width:140px}
   .pkg-row{display:flex;gap:3px;align-items:center;flex-wrap:nowrap}
   .pkg-calc-lbl{font-size:10px;color:#aaa;margin-top:2px;white-space:nowrap}
+  .ing-hide-btn{background:none;border:none;cursor:pointer;color:#ddd;font-size:10px;padding:0 3px;vertical-align:middle;line-height:1;transition:color .2s;margin-left:4px}
+  .ing-hide-btn:hover{color:#ce5b40}
+  .ing-row-hidden{opacity:.35}
   .ing-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   .ing-table th{background:#faf9f7;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#999;border-bottom:1px solid #f0ede8;white-space:nowrap}
   .ing-table td{padding:7px 12px;border-bottom:1px solid #f8f6f3;vertical-align:middle}
@@ -403,6 +406,10 @@
         <button class="add-week-btn" onclick="addPurchaseWeek()">+ Новая неделя закупки</button>
         <button class="screenshot-btn" onclick="openScreenshotPicker()">📷 Загрузить скриншот</button>
         <input type="file" id="screenshot-input" accept="image/*" style="display:none" onchange="onScreenshotSelect(event)">
+        <button class="screenshot-btn" onclick="exportPurchaseData()">💾 Экспорт</button>
+        <input type="file" id="import-input" accept=".json" style="display:none" onchange="importPurchaseData(event)">
+        <button class="screenshot-btn" onclick="document.getElementById('import-input').click()">📂 Импорт</button>
+        <button class="screenshot-btn" id="toggle-hidden-btn" onclick="toggleShowHidden()">🙈 Скрытые</button>
       </div>
       <div id="ing-table-wrap" style="margin-bottom:28px"></div>
       <div id="cost-results-section" style="display:none">
@@ -1173,13 +1180,22 @@ function savePkgInput(weekStr, ingId, field, val) {
   updateCostResults();
 }
 
+let _showHidden = false;
+
 function renderPurchaseTab() {
   const data = getPurchaseData();
   const weeks = data.weeks;
   const ingModes = data.ingModes || {};
   const pkgInputs = data.pkgInputs || {};
+  const hiddenIngs = data.hiddenIngs || [];
   const wrap = document.getElementById('ing-table-wrap');
   if (!wrap) return;
+
+  // Update hidden-toggle button label
+  const hiddenBtn = document.getElementById('toggle-hidden-btn');
+  if (hiddenBtn) hiddenBtn.textContent = _showHidden
+    ? '👁 Все'
+    : ('🙈 Скрытые' + (hiddenIngs.length ? ' (' + hiddenIngs.length + ')' : ''));
 
   if (weeks.length === 0) {
     wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>Нажмите «+ Новая неделя закупки» чтобы начать вводить цены</div>';
@@ -1206,12 +1222,19 @@ function renderPurchaseTab() {
   catOrder.forEach(cat => {
     html += '<tr class="ing-cat-row"><td colspan="' + (2 + weeks.length) + '">' + esc(cat) + '</td></tr>';
     catMap[cat].forEach(ing => {
+      const isHidden = hiddenIngs.includes(ing.id);
+      if (isHidden && !_showHidden) return;
       const isPkg = ingModes[ing.id] === 'pkg';
       const unitLabel = isPkg ? 'упак.' : '₽/' + ing.unit;
       const toggleTitle = isPkg ? 'Ввод ₽/' + ing.unit : 'Ввод цена + вес упаковки';
       const toggleIcon = isPkg ? '✏' : '📦';
+      const hideIcon = isHidden ? '👁' : '×';
+      const hideTitle = isHidden ? 'Показать' : 'Скрыть';
 
-      html += '<tr><td>' + esc(ing.name) + '</td>';
+      html += '<tr' + (isHidden ? ' class="ing-row-hidden"' : '') + '>'
+        + '<td>' + esc(ing.name)
+        + '<button class="ing-hide-btn" onclick="toggleHideIng(\'' + ing.id + '\')" title="' + hideTitle + '">' + hideIcon + '</button>'
+        + '</td>';
       html += '<td class="unit-cell" style="white-space:nowrap">' + unitLabel
         + '&nbsp;<button class="mode-toggle-btn" onclick="toggleIngMode(\'' + ing.id + '\')" title="' + toggleTitle + '">'
         + toggleIcon + '</button></td>';
@@ -1372,6 +1395,55 @@ function updateCostResults() {
     + '<tr class="fd-hl"><td><b>Для +5 000 ₽/день чистыми</b></td>'
     + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f1.target !== null ? f1.target : '∞') + '</td>'
     + '<td style="text-align:right;font-weight:700;color:#2e7d32">' + (f2.target !== null ? f2.target : '∞') + '</td></tr>';
+}
+
+// ── ЭКСПОРТ / ИМПОРТ ────────────────────────────────────────────────────────
+function exportPurchaseData() {
+  const data = getPurchaseData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date();
+  const ds = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  a.href = url;
+  a.download = 'reforma-zakup-' + ds + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importPurchaseData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.weeks) || typeof data.prices !== 'object') throw new Error('Неверный формат файла');
+      savePurchaseData(data);
+      renderPurchaseTab();
+    } catch(err) {
+      alert('Ошибка импорта: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ── СКРЫТИЕ ИНГРЕДИЕНТОВ ────────────────────────────────────────────────────
+function toggleHideIng(ingId) {
+  const data = getPurchaseData();
+  if (!data.hiddenIngs) data.hiddenIngs = [];
+  const idx = data.hiddenIngs.indexOf(ingId);
+  if (idx >= 0) data.hiddenIngs.splice(idx, 1);
+  else data.hiddenIngs.push(ingId);
+  savePurchaseData(data);
+  renderPurchaseTab();
+}
+
+function toggleShowHidden() {
+  _showHidden = !_showHidden;
+  renderPurchaseTab();
 }
 
 // ── CLAUDE API KEY ──────────────────────────────────────────────────────────
