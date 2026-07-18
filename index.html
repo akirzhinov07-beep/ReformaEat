@@ -2045,18 +2045,19 @@ function getDeliveryDateStr() {
 function renderDeliveryDate() {
   const dow = getMoscowNow().getDay();
   const d = getFirstDeliveryDate();
-  const dateStr = d.toLocaleDateString('ru', {day:'numeric', month:'long', weekday:'long'});
+  const dateNum  = d.toLocaleDateString('ru', {day:'numeric', month:'long'});
+  const dateWeek = d.toLocaleDateString('ru', {weekday:'long'});
   const notice = document.getElementById('deliveryNotice');
   const badge  = document.getElementById('deliveryDateBadge');
   if (!notice || !badge) return;
   if (dow <= 3) {
-    notice.innerHTML = '📅 Заказы <b>воскресенье–среда</b> — доставка в <b>четверг</b>';
+    notice.innerHTML = '📅 Заказы, оформленные <b>с воскресенья по среду</b> — первый день доставки в <b>четверг</b>';
     badge.style.background = 'var(--coral,#ce5b40)';
   } else {
-    notice.innerHTML = '📅 Заказы <b>четверг–суббота</b> — доставка в <b>воскресенье</b>';
+    notice.innerHTML = '📅 Заказы, оформленные <b>с четверга по субботу</b> — первый день доставки в <b>воскресенье</b>';
     badge.style.background = 'var(--ink3,#888)';
   }
-  badge.textContent = '📅 ' + dateStr;
+  badge.textContent = '📅 Доставка первого заказа ' + dateNum + ' (' + dateWeek + ')';
 }
 /* ── PROMO CODES ── */
 const PROMO_CODES = {
@@ -2335,17 +2336,17 @@ function build7DayUI() {
   if (w7Notice && dates.length === 7) {
     const dow7 = getMoscowNow().getDay();
     const rule = dow7 <= 3
-      ? '📅 Заказы <b>воскресенье–среда</b> — первая доставка в <b>четверг</b>'
-      : '📅 Заказы <b>четверг–суббота</b> — первая доставка в <b>воскресенье</b>';
-    const first = dates[0].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
-    const last  = dates[6].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
-    w7Notice.innerHTML = rule + `<br><span style="color:#888;font-weight:400;font-size:12px">С ${first} по ${last} · суббота — выходной повара</span>`;
+      ? '📅 Заказы, оформленные <b>с воскресенья по среду</b> — первый день доставки в <b>четверг</b>'
+      : '📅 Заказы, оформленные <b>с четверга по субботу</b> — первый день доставки в <b>воскресенье</b>';
+    w7Notice.innerHTML = rule;
     w7Notice.style.display = '';
   }
   if (w7Badge && dates.length === 7) {
     const dow7 = getMoscowNow().getDay();
     w7Badge.style.background = dow7 <= 3 ? 'var(--coral,#ce5b40)' : 'var(--ink3,#888)';
-    w7Badge.textContent = '📅 ' + dates[0].toLocaleDateString('ru', {weekday:'long', day:'numeric', month:'long'});
+    const firstDateNum  = dates[0].toLocaleDateString('ru', {day:'numeric', month:'long'});
+    const firstDateWeek = dates[0].toLocaleDateString('ru', {weekday:'long'});
+    w7Badge.textContent = '📅 Доставка первого заказа ' + firstDateNum + ' (' + firstDateWeek + ')';
     w7Badge.style.display = '';
   }
 
