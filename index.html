@@ -1552,6 +1552,27 @@ const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
 let _pendingPaymentOrder = null;
 let _pendingPaymentAmount = 0;
 
+// Вызывается ПОСЛЕ подтверждения оплаты — только тогда сохраняем заказ
+function confirmPendingOrder() {
+  try {
+    const pending = JSON.parse(localStorage.getItem('rf_pending_order') || 'null') || _pendingPaymentOrder;
+    if (!pending) return;
+    const confirmed = Object.assign({}, pending, {paid: true});
+    const orders = JSON.parse(localStorage.getItem('rf_orders') || '[]');
+    if (!orders.some(function(o){ return o.id === confirmed.id; })) {
+      orders.unshift(confirmed);
+      localStorage.setItem('rf_orders', JSON.stringify(orders));
+    }
+    saveOrderToCloud(confirmed);
+    fetch('https://reformaeat.ru/notifyorder.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(confirmed)
+    }).catch(function(){});
+    localStorage.removeItem('rf_pending_order');
+  } catch(e) {}
+}
+
 function startPayment() {
   const btn     = document.getElementById('modalPayBtn');
   const loading = document.getElementById('modalPayLoading');
@@ -1584,6 +1605,7 @@ function startPayment() {
         loading.textContent = '';
         tg.openInvoice(data.invoice_link, function(status) {
           if (status === 'paid') {
+            confirmPendingOrder();
             localStorage.setItem('rf_success_order', JSON.stringify({
               orderId: String(order.id), name: order.name||'', plan: order.plan||'',
               mode: order.mode||'1day', totalPrice: amount, city: order.city||'',
@@ -1644,6 +1666,7 @@ function closeSuccess() {
 (function(){
   const params = new URLSearchParams(window.location.search);
   if (params.get('payment') === 'success') {
+    confirmPendingOrder(); // сохранить заказ только после подтверждения оплаты
     const oid = params.get('oid') || '';
     window.addEventListener('load', function() {
       populateSuccessModal(oid);
@@ -2166,20 +2189,12 @@ function tryOrder() {
       plan: plan==='2000'?'2000 ккал':'1600 ккал',
       dishes: dishes
     };
-    _pendingPaymentOrder = order;
+    _pendingPaymentOrder = Object.assign({}, order, {mode:'1day', paid: false});
     _pendingPaymentAmount = totalAmt;
     try{
-      const orders=JSON.parse(localStorage.getItem('rf_orders')||'[]');
-      orders.unshift(order);
-      localStorage.setItem('rf_orders',JSON.stringify(orders));
+      localStorage.setItem('rf_pending_order', JSON.stringify(_pendingPaymentOrder));
       localStorage.setItem('rf_returning','1');
     }catch(e){}
-    fetch('https://reformaeat.ru/notifyorder.php',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...order, mode:'1day'})
-    }).catch(function(){});
-    saveOrderToCloud({...order, mode:'1day'});
   })();
 }
 function closeModal() {
@@ -2607,19 +2622,12 @@ function tryOrder7() {
       house: document.getElementById('w7-fHouse').value.trim(),
       days: weekDays
     };
-    _pendingPaymentOrder = order;
+    _pendingPaymentOrder = Object.assign({}, order, {mode:'7day', paid: false});
     _pendingPaymentAmount = order.totalPrice || 0;
     try {
-      const orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
-      orders.unshift(order); localStorage.setItem('rf_orders', JSON.stringify(orders));
+      localStorage.setItem('rf_pending_order', JSON.stringify(_pendingPaymentOrder));
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
-    fetch('https://reformaeat.ru/notifyorder.php',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({...order, mode:'7day', days: weekDays})
-    }).catch(function(){});
-    saveOrderToCloud({...order, mode:'7day'});
   })();
 }
 

@@ -103,6 +103,8 @@
   }
   .badge-plan { background: #fde8e4; color: #ce5b40; }
   .badge-promo { background: #e6f4ea; color: #2e7d32; }
+  .badge-unpaid { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+  .badge-paid   { background: #e6f4ea; color: #2e7d32; }
 
   /* DISHES EXPAND */
   .dishes-toggle { color: #ce5b40; cursor: pointer; font-size: 12px; text-decoration: underline; white-space: nowrap; }
@@ -315,6 +317,7 @@
             <th>Дата доставки</th>
             <th>Адрес</th>
             <th>План</th>
+            <th>Оплата</th>
             <th>Промокод</th>
             <th>Блюда</th>
           </tr></thead>
@@ -655,15 +658,21 @@ async function loadData() {
     const sorted = [...orders].sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
     sorted.forEach((o, i) => {
       const uid = 'dish-' + i;
+      const unpaid = o.paid === false;
+      const payBadge = unpaid
+        ? '<span class="badge badge-unpaid">⚠ Не оплачен</span>'
+        : '<span class="badge badge-paid">✓ Оплачен</span>';
       const tr = document.createElement('tr');
+      if (unpaid) tr.style.background = '#fffbf0';
       tr.innerHTML = `
-        <td style="color:#aaa;font-size:12px">${sorted.length - i}</td>
+        <td style="color:#aaa;font-size:12px">${i + 1}</td>
         <td style="white-space:nowrap">${fmtDate(o.date)}</td>
         <td><b>${esc(o.name||'—')}</b></td>
         <td style="white-space:nowrap">${esc(o.phone||'—')}</td>
         <td style="white-space:nowrap">${esc(o.deliveryDate||'—')}</td>
         <td style="font-size:13px">${[o.city,o.street,o.house?'д.'+o.house:'',o.apt?'кв.'+o.apt:''].filter(Boolean).join(', ')||'<span style="color:#ddd">—</span>'}</td>
         <td><span class="badge badge-plan">${esc(o.plan||'—')}</span></td>
+        <td>${payBadge}</td>
         <td>${o.promo ? '<span class="badge badge-promo">'+esc(o.promo)+'</span>' : '<span style="color:#ddd">—</span>'}</td>
         <td>${renderDishCell(o, uid)}</td>`;
       tbody.appendChild(tr);
@@ -680,7 +689,12 @@ async function loadData() {
   });
   const cbody = document.getElementById('clients-tbody');
   cbody.innerHTML = '';
-  const clientList = Object.values(clientMap).sort((a,b) => b.orders.length - a.orders.length);
+  // Sort clients by newest order date (most recent first)
+  const clientList = Object.values(clientMap).sort((a,b) => {
+    const aDate = Math.max(...a.orders.map(o => new Date(o.date||0)));
+    const bDate = Math.max(...b.orders.map(o => new Date(o.date||0)));
+    return bDate - aDate;
+  });
   if (clientList.length === 0) {
     document.getElementById('clients-table').style.display = 'none';
     document.getElementById('clients-empty').style.display = 'block';
@@ -689,12 +703,14 @@ async function loadData() {
     document.getElementById('clients-empty').style.display = 'none';
     clientList.forEach(c => {
       const lastOrder = c.orders.sort((a,b) => new Date(b.date||0) - new Date(a.date||0))[0];
+      const lastUnpaid = lastOrder && lastOrder.paid === false;
       const tr = document.createElement('tr');
+      if (lastUnpaid) tr.style.background = '#fffbf0';
       tr.innerHTML = `
         <td><b>${esc(c.name||'—')}</b></td>
         <td>${esc(c.phone||'—')}</td>
         <td style="text-align:center;font-weight:700;color:#ce5b40">${c.orders.length}</td>
-        <td style="white-space:nowrap">${fmtDate(lastOrder?.date)}</td>
+        <td style="white-space:nowrap">${fmtDate(lastOrder?.date)}${lastUnpaid ? ' <span class="badge badge-unpaid" style="font-size:10px">⚠ не оплачен</span>' : ''}</td>
         <td>${[...c.plans].map(p=>`<span class="badge badge-plan">${esc(p)}</span>`).join(' ')}</td>`;
       cbody.appendChild(tr);
     });
@@ -886,7 +902,7 @@ function buildDeliveryCalendar() {
     dateMap[d.toISOString().slice(0, 10)] = [];
   }
 
-  orders.forEach(o => {
+  orders.filter(o => o.paid !== false).forEach(o => {
     const addr = [o.city, o.street, o.house ? 'д.' + o.house : '', o.apt ? 'кв.' + o.apt : ''].filter(Boolean).join(', ');
     const planLabel = o.mealPlan || o.plan || '—';
 
