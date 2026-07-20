@@ -1552,7 +1552,6 @@ const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
 let _pendingPaymentOrder = null;
 let _pendingPaymentAmount = 0;
 
-// Вызывается ПОСЛЕ подтверждения оплаты — только тогда сохраняем заказ
 function confirmPendingOrder() {
   try {
     const pending = JSON.parse(localStorage.getItem('rf_pending_order') || 'null') || _pendingPaymentOrder;
@@ -1563,12 +1562,6 @@ function confirmPendingOrder() {
       orders.unshift(confirmed);
       localStorage.setItem('rf_orders', JSON.stringify(orders));
     }
-    saveOrderToCloud(confirmed);
-    fetch('https://reformaeat.ru/notifyorder.php', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(confirmed)
-    }).catch(function(){});
     localStorage.removeItem('rf_pending_order');
   } catch(e) {}
 }
@@ -2156,6 +2149,12 @@ function tryOrder() {
       localStorage.setItem('rf_pending_order', JSON.stringify(_pendingPaymentOrder));
       localStorage.setItem('rf_returning','1');
     }catch(e){}
+    saveOrderToCloud(_pendingPaymentOrder);
+    fetch('https://reformaeat.ru/notifyorder.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(_pendingPaymentOrder)
+    }).catch(function(){});
   })();
 }
 function closeModal() {
@@ -2595,6 +2594,12 @@ function tryOrder7() {
       localStorage.setItem('rf_pending_order', JSON.stringify(_pendingPaymentOrder));
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
+    saveOrderToCloud(_pendingPaymentOrder);
+    fetch('https://reformaeat.ru/notifyorder.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(_pendingPaymentOrder)
+    }).catch(function(){});
   })();
 }
 
