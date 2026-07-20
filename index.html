@@ -2586,6 +2586,8 @@ function tryOrder7() {
       comment, city: document.getElementById('w7-fCity').value.trim(),
       street: document.getElementById('w7-fStreet').value.trim(),
       house: document.getElementById('w7-fHouse').value.trim(),
+      apt: document.getElementById('w7-fApt').value.trim(),
+      deliveryDate: weekDays[0] ? weekDays[0].date : '',
       days: weekDays,
       dishesStr: dishesStr7day
     };
