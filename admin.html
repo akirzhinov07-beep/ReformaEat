@@ -588,11 +588,22 @@ async function fetchCloudOrders() {
 }
 
 function renderDishCell(o, uid) {
+  // 1. Строка из облака (Google Sheets)
   if (o.dishesStr) {
     const lines = esc(o.dishesStr).replace(/ \| /g, '<br>').replace(/, /g, '<br>');
     return `<span class="dishes-toggle" onclick="toggleDishes('${uid}')">Состав</span>
             <div class="dishes-list" id="${uid}">${lines}</div>`;
   }
+  // 2. 1-дневный заказ: dishes — обычный объект {Завтрак:"...", Обед:"...", Ужин:"..."}
+  if (o.dishes && !Array.isArray(o.dishes) && typeof o.dishes === 'object') {
+    const entries = Object.entries(o.dishes);
+    if (entries.length > 0) {
+      const lines = entries.map(([k,v]) => esc(k) + ': ' + esc(v)).join('<br>');
+      return `<span class="dishes-toggle" onclick="toggleDishes('${uid}')">Состав</span>
+              <div class="dishes-list" id="${uid}">${lines}</div>`;
+    }
+  }
+  // 3. Старый формат: dishes — массив объектов
   const dishes = Array.isArray(o.dishes) ? o.dishes : [];
   if (dishes.length === 0) return '<span style="color:#ddd">—</span>';
   const names = dishes.map(d => (d.name || d) + (d.kcal ? ' (' + d.kcal + ' ккал)' : '')).join('\n');

@@ -2173,6 +2173,7 @@ function tryOrder() {
       const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
       if(d) dishes[labels2[t]]=d.name;
     });
+    const dishesStr1day = Object.entries(dishes).map(function(e){return e[0]+': '+e[1];}).join(', ');
     const order={
       id: 'tmp-' + Date.now(),
       date: new Date().toISOString(),
@@ -2187,7 +2188,8 @@ function tryOrder() {
       promo: document.getElementById('fPromo').value.trim(),
       discount: discountAmt,
       plan: plan==='2000'?'2000 ккал':'1600 ккал',
-      dishes: dishes
+      dishes: dishes,
+      dishesStr: dishesStr1day
     };
     _pendingPaymentOrder = Object.assign({}, order, {mode:'1day', paid: false});
     _pendingPaymentAmount = totalAmt;
@@ -2612,6 +2614,11 @@ function tryOrder7() {
   document.getElementById('overlay').classList.add('show');
 
   (function(){
+    // Строковая версия блюд для быстрого отображения в админке
+    const dishesStr7day = (weekDays || []).map(function(d) {
+      var meals = Object.entries(d.dishes || {}).map(function(e){return e[0]+': '+e[1];}).join(', ');
+      return d.date + ': ' + meals;
+    }).join(' | ');
     const order = {
       id: 'tmp-' + Date.now(), date: new Date().toISOString(),
       mode: '7day', name, phone: '+7 ' + document.getElementById('w7-fPhone').value,
@@ -2620,7 +2627,8 @@ function tryOrder7() {
       comment, city: document.getElementById('w7-fCity').value.trim(),
       street: document.getElementById('w7-fStreet').value.trim(),
       house: document.getElementById('w7-fHouse').value.trim(),
-      days: weekDays
+      days: weekDays,
+      dishesStr: dishesStr7day
     };
     _pendingPaymentOrder = Object.assign({}, order, {mode:'7day', paid: false});
     _pendingPaymentAmount = order.totalPrice || 0;
