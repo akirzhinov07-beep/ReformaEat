@@ -1581,9 +1581,6 @@ function startPayment() {
 
   const order  = _pendingPaymentOrder;
   const amount = _pendingPaymentAmount;
-  const tg     = window.Telegram?.WebApp;
-  const inTG   = tg && tg.initData && tg.initData.length > 0;
-
   const body = JSON.stringify({
     orderId:     String(order.id),
     amount:      amount,
@@ -1592,45 +1589,8 @@ function startPayment() {
     phone:       order.phone
   });
 
-  if (inTG) {
-    // ── Telegram Mini App: нативная оплата ──
-    fetch('https://reformaeat.ru/create-tg-invoice.php', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: body
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok && data.invoice_link) {
-        loading.textContent = '';
-        tg.openInvoice(data.invoice_link, function(status) {
-          if (status === 'paid') {
-            confirmPendingOrder();
-            localStorage.setItem('rf_success_order', JSON.stringify({
-              orderId: String(order.id), name: order.name||'', plan: order.plan||'',
-              mode: order.mode||'1day', totalPrice: amount, city: order.city||'',
-              firstDeliveryDate: getDeliveryDateStr()
-            }));
-            document.getElementById('overlay').classList.remove('show');
-            populateSuccessModal(String(order.id));
-            document.getElementById('overlaySuccess').classList.add('show');
-          } else if (status === 'cancelled' || status === 'failed') {
-            loading.textContent = '⚠️ Оплата не завершена. Попробуйте ещё раз.';
-            btn.disabled = false;
-          }
-        });
-      } else {
-        loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
-        btn.disabled = false;
-      }
-    })
-    .catch(() => {
-      loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
-      btn.disabled = false;
-    });
-  } else {
-    // ── Браузер: редирект на страницу ЮКасса ──
-    fetch('https://reformaeat.ru/create-payment.php', {
+  // ── Оплата через ЮКасса (работает и в браузере, и в Telegram Mini App) ──
+  fetch('https://reformaeat.ru/create-payment.php', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: body
@@ -1653,7 +1613,6 @@ function startPayment() {
       loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
       btn.disabled = false;
     });
-  }
 }
 
 function closeSuccess() {
