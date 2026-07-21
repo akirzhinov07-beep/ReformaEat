@@ -1578,7 +1578,8 @@ function startPayment() {
     amount:      amount,
     description: 'reForma eat — ' + (order.plan || 'рацион'),
     name:        order.name,
-    phone:       order.phone
+    phone:       order.phone,
+    order:       order
   });
 
   function attemptPayment(attemptsLeft) {

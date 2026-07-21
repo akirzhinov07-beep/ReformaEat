@@ -2,11 +2,10 @@
 /**
  * reForma eat — создание платежа ЮКасса
  * POST /create-payment.php
- * Body: { orderId, amount, description, name, phone }
+ * Body: { orderId, amount, description, name, phone, order }
  */
 header('Content-Type: application/json; charset=utf-8');
 
-// Динамический CORS — разрешаем reformaeat.ru (с www и без)
 $allowed_origins = ['https://reformaeat.ru', 'https://www.reformaeat.ru'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $cors_origin = in_array($origin, $allowed_origins) ? $origin : 'https://reformaeat.ru';
@@ -31,7 +30,17 @@ $phone       = $data['phone'] ?? '';
 
 if ($amount < 10) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'Invalid amount']); exit; }
 
-// Уникальный ключ идемпотентности: orderId + минута (позволяет ретрай в ту же минуту)
+// Сохраняем полный заказ во временный файл — payment-webhook прочитает его
+// и отправит полное уведомление с составом в Telegram после подтверждения оплаты
+$fullOrder = $data['order'] ?? [];
+$fullOrder['name']    = $name;
+$fullOrder['phone']   = $phone;
+$fullOrder['amount']  = $amount;
+$fullOrder['orderId'] = $orderId;
+$tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rforder_' . $orderId . '.json';
+@file_put_contents($tmpFile, json_encode($fullOrder, JSON_UNESCAPED_UNICODE));
+
+// Ключ идемпотентности по минуте — безопасно ретраить в течение минуты
 $idempotenceKey = $orderId . '_' . floor(time() / 60);
 
 $payload = [
@@ -50,13 +59,13 @@ $payload = [
         'phone'    => $phone
     ],
     'capture'     => true,
-    'receipt'     => [   // чек (54-ФЗ) — обязателен для ЮКасса
+    'receipt'     => [
         'customer' => ['phone' => preg_replace('/\D/', '', $phone)],
         'items'    => [[
             'description'      => $description,
             'quantity'         => '1.00',
             'amount'           => ['value' => number_format($amount, 2, '.', ''), 'currency' => 'RUB'],
-            'vat_code'         => 1,   // без НДС
+            'vat_code'         => 1,
             'payment_subject'  => 'service',
             'payment_mode'     => 'full_payment'
         ]]
@@ -73,8 +82,8 @@ curl_setopt_array($ch, [
         'Content-Type: application/json',
         'Idempotence-Key: ' . $idempotenceKey
     ],
-    CURLOPT_CONNECTTIMEOUT => 10,   // таймаут на установку соединения
-    CURLOPT_TIMEOUT        => 25,   // общий таймаут (увеличен с 15 до 25)
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT        => 25,
     CURLOPT_SSL_VERIFYPEER => true,
 ]);
 
@@ -84,7 +93,6 @@ $curlErrno = curl_errno($ch);
 $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-// cURL не смог подключиться к ЮКасса
 if ($response === false || $curlErrno !== 0) {
     error_log('YooKassa cURL error: ' . $curlErrno . ' — ' . $curlError);
     echo json_encode([
