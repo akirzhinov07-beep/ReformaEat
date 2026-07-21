@@ -2522,12 +2522,7 @@ function update7Progress() {
   if (plan7 === '2000') {
     const priceEl = document.getElementById('w7-plan-price-2000');
     if (priceEl) {
-      if (extraCost > 0) {
-        const perDay = Math.round(price / 7);
-        priceEl.innerHTML = perDay.toLocaleString('ru') + ' ₽<span style="font-size:14px;font-weight:400">/день</span>';
-      } else {
-        priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 520 ₽<span style="font-size:14px;font-weight:400">/день</span>';
-      }
+      priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 520 ₽<span style="font-size:14px;font-weight:400">/день</span>';
     }
   }
   const hintEl = document.getElementById('week-progress-hint');
