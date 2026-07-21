@@ -881,10 +881,10 @@ nav{
 }
 /* ── PWA INSTALL BANNER ── */
 #pwa-banner{
-  display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  display:none;position:fixed;top:12px;right:12px;left:auto;transform:none;
   background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.15);
-  padding:14px 18px;z-index:9999;max-width:340px;width:calc(100% - 32px);
-  align-items:center;gap:12px;
+  padding:10px 14px;z-index:9999;max-width:260px;width:auto;
+  align-items:center;gap:10px;
 }
 #pwa-banner.show{display:flex}
 .pwa-icon{width:44px;height:44px;border-radius:10px;background:#ce5b40;
@@ -1227,7 +1227,7 @@ nav{
           <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
           <div class="plan-opt-kcal-badge">Базовый рацион + доп. порция белка</div>
         </div>
-        <div class="plan-opt-price">1 520 ₽</div>
+        <div class="plan-opt-price"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽</div>
       </button>
     </div>
     <div class="meal-block" data-meal="breakfast">
@@ -1258,7 +1258,7 @@ nav{
       <div class="booster-title-row">
         <span class="boost-badge">💪 Бустер</span>
         <span class="booster-title">Белковый перекус</span>
-        <div class="booster-sub" style="margin-top:0;margin-left:auto;font-size:12px;color:var(--ink3)">100 г · один вариант</div>
+        <div class="booster-sub" style="margin-top:0;margin-left:auto;font-size:12px;color:var(--ink3)">100 г · можно несколько</div>
       </div>
       <div id="list-booster"></div>
     </div>
@@ -1622,8 +1622,19 @@ function startPayment() {
 
 function closeSuccess() {
   document.getElementById('overlaySuccess').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
   localStorage.removeItem('rf_success_order');
-  closeModal();
+  _resetOrderState();
+  // После успешного заказа — навигация
+  if (document.getElementById('app1day').style.display !== 'none') {
+    if (isReturningUser()) {
+      document.getElementById('app1day').style.display = 'none';
+      selectMode('7day');
+    }
+  } else if (document.getElementById('app7day').style.display !== 'none') {
+    document.getElementById('app7day').style.display = 'none';
+    initApp(JSON.parse(localStorage.getItem('rf_user')||'null'));
+  }
 }
 
 // Show success overlay if returning from YooKassa
@@ -1832,7 +1843,7 @@ const menuByDay = {
 };
 const todayDOW = new Date().getDay();
 const todayMenus = menuByDay[todayDOW];
-let sel  = {breakfast:null,lunch:null,dinner:null,booster:null};
+let sel  = {breakfast:null,lunch:null,dinner:null,boosters:[]};
 let plan = '1600';
 const TARGET = {'1600':1600,'2000':2000};
 const CIRC   = 376; // 2π×60
@@ -1846,7 +1857,7 @@ function buildList(type) {
     ? (MENU[type]||[])
     : (MENU[type]||[]).filter(d => todayMenus.includes(d.day));
   dishes.forEach(d => {
-    const on = sel[type]===d.id;
+    const on = isBoost ? sel.boosters.includes(d.id) : sel[type]===d.id;
     const row = document.createElement('div');
     row.className = (isBoost?'boost-row':'dish-row')+(on?' on':'');
     if(isBoost) {
@@ -1884,11 +1895,20 @@ function buildList(type) {
     }
     row.dataset.dishId = d.id;
     row.onclick = () => {
-      const wasOn = sel[type] === d.id;
-      sel[type] = wasOn ? null : d.id;
-      el.querySelectorAll('[data-dish-id]').forEach(r => {
-        r.classList.toggle('on', r.dataset.dishId === sel[type]);
-      });
+      if (isBoost) {
+        const idx = sel.boosters.indexOf(d.id);
+        if (idx >= 0) sel.boosters.splice(idx, 1);
+        else sel.boosters.push(d.id);
+        el.querySelectorAll('[data-dish-id]').forEach(r => {
+          r.classList.toggle('on', sel.boosters.includes(r.dataset.dishId));
+        });
+      } else {
+        const wasOn = sel[type] === d.id;
+        sel[type] = wasOn ? null : d.id;
+        el.querySelectorAll('[data-dish-id]').forEach(r => {
+          r.classList.toggle('on', r.dataset.dishId === sel[type]);
+        });
+      }
       updateCalc();
     };
     el.appendChild(row);
@@ -1896,11 +1916,9 @@ function buildList(type) {
 }
 /* ── CALC ── */
 function updateCalc() {
-  const types = plan==='2000'
-    ?['breakfast','lunch','dinner','booster']
-    :['breakfast','lunch','dinner'];
+  const mealTypes = ['breakfast','lunch','dinner'];
   let kcal=0,p=0,f=0,c=0,done=0;
-  types.forEach(t => {
+  mealTypes.forEach(t => {
     const olEl = document.getElementById('ol-'+t);
     const s = sel[t];
     if(s) {
@@ -1911,6 +1929,25 @@ function updateCalc() {
       olEl.textContent='не выбрано';olEl.className='ol-val';
     }
   });
+  const totalTypes = plan==='2000' ? 4 : 3;
+  if (plan==='2000') {
+    const olBEl  = document.getElementById('ol-booster');
+    const olBRow = document.getElementById('ol-booster-row');
+    const olBDiv = document.getElementById('boostDivider');
+    if (sel.boosters.length > 0) {
+      done++;
+      const names = sel.boosters.map(id => {
+        const d=(MENU['booster']||[]).find(x=>x.id===id);
+        if(d){kcal+=d.kcal;p+=d.p;f+=d.f;c+=d.c;}
+        return d ? d.name : '';
+      }).filter(Boolean);
+      if(olBEl){olBEl.textContent=names.join(' + ');olBEl.className='ol-val set';}
+    } else {
+      if(olBEl){olBEl.textContent='не выбрано';olBEl.className='ol-val';}
+    }
+    if(olBRow) olBRow.style.display='';
+    if(olBDiv) olBDiv.style.display='';
+  }
   const tgt=TARGET[plan];
   const pct=Math.min(kcal/tgt,1);
   const ring=document.getElementById('ringFill');
@@ -1920,18 +1957,17 @@ function updateCalc() {
   document.getElementById('totalP').textContent=p+'г';
   document.getElementById('totalF').textContent=f+'г';
   document.getElementById('totalC').textContent=c+'г';
-  const rem=types.length-done;
-  const allDishDone=done===types.length;
+  const rem=totalTypes-done;
+  const allDishDone=done===totalTypes;
   updateOrderBtn();
   updateHint(allDishDone, done, rem);
 }
 function updateOrderBtn() {
-  const types=plan==='2000'
-    ?['breakfast','lunch','dinner','booster']
-    :['breakfast','lunch','dinner'];
-  const allDish=types.every(t=>sel[t]);
-  const done=types.filter(t=>sel[t]).length;
-  const rem=types.length-done;
+  const types=['breakfast','lunch','dinner'];
+  const allDish=types.every(t=>sel[t]) && (plan!=='2000' || sel.boosters.length>0);
+  const done=types.filter(t=>sel[t]).length + (plan==='2000' && sel.boosters.length>0 ? 1 : 0);
+  const totalTypes = plan==='2000' ? 4 : 3;
+  const rem=totalTypes-done;
   const name=document.getElementById('fName').value.trim();
   const phone=getPhone();
   const city=document.getElementById('fCity').value.trim();
@@ -1944,10 +1980,7 @@ function updateOrderBtn() {
   updateHint(allDish, done, rem);
 }
 function updateHint(allDish, done, rem) {
-  const types=plan==='2000'
-    ?['breakfast','lunch','dinner','booster']
-    :['breakfast','lunch','dinner'];
-  const allDishDone = done===types.length;
+  const allDishDone = done===(plan==='2000' ? 4 : 3);
   const name=document.getElementById('fName').value.trim();
   const phone=getPhone();
   const hint=document.getElementById('orderHint');
@@ -2007,7 +2040,7 @@ function selectPlan(p) {
   } else {
     p2.classList.remove('on');p1.classList.add('on');
     bb.style.display='none';br.style.display='none';bd.style.display='none';
-    sel.booster=null;buildList('booster');
+    sel.boosters=[];buildList('booster');
   }
   updateCalc();
 }
@@ -2101,8 +2134,7 @@ function tryOrder() {
   if(phone.length<10){document.getElementById('fPhone').classList.add('error');document.getElementById('fPhone').focus();return;}
   document.getElementById('fName').classList.remove('error');
   document.getElementById('fPhone').classList.remove('error');
-  const types=plan==='2000'?['breakfast','lunch','dinner','booster']:['breakfast','lunch','dinner'];
-  const labels={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
+  const labels={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин'};
   let lines=`<strong>${name}</strong> · +7 ${document.getElementById('fPhone').value}<br>`;
   const autoDeliveryDate = getAutoDeliveryDate();
   const autoDateStr = getDeliveryDateStr();
@@ -2116,11 +2148,17 @@ function tryOrder() {
     else lines+=`Промокод: <strong>${promo}</strong><br>`;
   }
   lines+='<br>';
-  types.forEach(t=>{
+  ['breakfast','lunch','dinner'].forEach(t=>{
     const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
     if(d) lines+=`${labels[t]}: ${d.name}<br>`;
   });
-  const amount1day = plan==='2000' ? 1520 : 1390;
+  if (plan==='2000' && sel.boosters.length>0) {
+    const bNames=sel.boosters.map(id=>{const d=(MENU['booster']||[]).find(x=>x.id===id);return d?d.name:'';}).filter(Boolean);
+    lines+=`Бустер: ${bNames.join(' + ')}<br>`;
+    if(sel.boosters.length>1) lines+=`<span style="color:var(--ink3);font-size:12px">+${(sel.boosters.length-1)*120} ₽ за доп. бустеры</span><br>`;
+  }
+  const boosterExtra = plan==='2000' ? Math.max(0, sel.boosters.length-1)*120 : 0;
+  const amount1day = (plan==='2000' ? 1520 : 1390) + boosterExtra;
   const discountAmt = applyPromoDiscount(promoData, amount1day, '1day');
   const totalAmt = Math.max(0, amount1day - discountAmt);
   document.getElementById('modalSummary').innerHTML=lines;
@@ -2131,13 +2169,16 @@ function tryOrder() {
   document.getElementById('overlay').classList.add('show');
   /* ── SAVE ORDER ── */
   (function(){
-    const types2=plan==='2000'?['breakfast','lunch','dinner','booster']:['breakfast','lunch','dinner'];
-    const labels2={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин',booster:'Бустер'};
+    const labels2={breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин'};
     const dishes={};
-    types2.forEach(t=>{
+    ['breakfast','lunch','dinner'].forEach(t=>{
       const d=(MENU[t]||[]).find(x=>x.id===sel[t]);
       if(d) dishes[labels2[t]]=d.name;
     });
+    if(plan==='2000' && sel.boosters.length>0){
+      const bNames=sel.boosters.map(id=>{const d=(MENU['booster']||[]).find(x=>x.id===id);return d?d.name:'';}).filter(Boolean);
+      dishes['Бустер']=bNames.join(' + ');
+    }
     const dishesStr1day = Object.entries(dishes).map(function(e){return e[0]+': '+e[1];}).join(', ');
     const order={
       id: 'tmp-' + Date.now(),
@@ -2171,31 +2212,22 @@ function tryOrder() {
   })();
 }
 function closeModal() {
+  // Просто закрываем оверлей — выбор блюд НЕ сбрасывается, чтобы пользователь мог повторить оплату
   document.getElementById('overlay').classList.remove('show');
-  // Reset 1-day state
-  sel={breakfast:null,lunch:null,dinner:null,booster:null};
+}
+
+function _resetOrderState() {
+  sel = {breakfast:null, lunch:null, dinner:null, boosters:[]};
   ['fName','fPhone','fComment','fPromo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   prefillUserData();
   ['breakfast','lunch','dinner','booster'].forEach(buildList);
-  renderDeliveryDate();updateCalc();
-  // Reset 7-day state
-  sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,booster:null}));
+  renderDeliveryDate(); updateCalc();
+  sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
   ['w7-fName','w7-fPhone','w7-fCity','w7-fStreet','w7-fHouse','w7-fApt','w7-fEntrance','w7-fComment','w7-fPromo'].forEach(id => {
     const el=document.getElementById(id); if(el) el.value='';
   });
   const c1=document.getElementById('w7-chkOferta'); if(c1) c1.checked=false;
   const c2=document.getElementById('w7-chkPd'); if(c2) c2.checked=false;
-  // After order: navigate based on user history
-  if (document.getElementById('app1day').style.display !== 'none') {
-    // After 1-day order: if now returning user, go to 7-day
-    if (isReturningUser()) {
-      document.getElementById('app1day').style.display = 'none';
-      selectMode('7day');
-    }
-  } else if (document.getElementById('app7day').style.display !== 'none') {
-    document.getElementById('app7day').style.display = 'none';
-    initApp(JSON.parse(localStorage.getItem('rf_user')||'null'));
-  }
 }
 /* ── ФОТО ИЗ GOOGLE ДИСКА ── */
 // photo_id берётся из колонки photo_id в Google Sheet
@@ -2247,7 +2279,7 @@ function backToMode() {
    7-DAY MODE
    ══════════════════════════════════════════════════ */
 let plan7 = '1600';
-let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,booster:null}));
+let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
 const PLAN_PRICE = {'1600':1390, '2000':1520};
 const DELIVERY_COSTS = {'нальчик':150,'нарткала':250,'баксан':350,'чегем':250};
 function getDeliveryCost(city) {
@@ -2299,8 +2331,8 @@ function selectPlan7(p) {
   plan7 = p;
   document.getElementById('wpopt1600').classList.toggle('on', p === '1600');
   document.getElementById('wpopt2000').classList.toggle('on', p === '2000');
-  if (p === '1600') sel7.forEach(d => { d.booster = null; });
-  const price = PLAN_PRICE[p] * 7;
+  if (p === '1600') sel7.forEach(d => { d.boosters = []; });
+  const price = PLAN_PRICE[p] * 7 + get7ExtraBoosterCost();
   const el = document.getElementById('week-total-price');
   if (el) el.textContent = price.toLocaleString('ru') + ' ₽';
   document.querySelector('#app7day .mode-card-price-sub') && (document.querySelector('#app7day .mode-card-price-sub').textContent = PLAN_PRICE[p] + ' ₽ × 7 дней');
@@ -2385,8 +2417,11 @@ function build7DayUI() {
       }
 
       dishes.forEach(d => {
+        const isSelected = mealType === 'booster'
+          ? (selDay.boosters||[]).includes(d.id)
+          : selDay[mealType] === d.id;
         const tile = document.createElement('div');
-        tile.className = 'w7-dish' + (selDay[mealType] === d.id ? ' on' : '');
+        tile.className = 'w7-dish' + (isSelected ? ' on' : '');
         tile.dataset.id = d.id;
         tile.innerHTML = `<div class="w7-dish-name">${d.name}</div><div class="w7-dish-kcal">${d.kcal} ккал · ${d.w}</div>`;
         tile.onclick = () => pick7(idx, mealType, d.id, col);
@@ -2405,17 +2440,31 @@ function build7DayUI() {
 }
 
 function pick7(dayIdx, mealType, dishId, colEl) {
-  sel7[dayIdx][mealType] = sel7[dayIdx][mealType] === dishId ? null : dishId;
-  colEl.querySelectorAll('.w7-dish').forEach(tile => {
-    tile.classList.toggle('on', tile.dataset.id === sel7[dayIdx][mealType]);
-  });
+  if (mealType === 'booster') {
+    const bArr = sel7[dayIdx].boosters;
+    const pos = bArr.indexOf(dishId);
+    if (pos >= 0) bArr.splice(pos, 1); else bArr.push(dishId);
+    colEl.querySelectorAll('.w7-dish').forEach(tile => {
+      tile.classList.toggle('on', bArr.includes(tile.dataset.id));
+    });
+  } else {
+    sel7[dayIdx][mealType] = sel7[dayIdx][mealType] === dishId ? null : dishId;
+    colEl.querySelectorAll('.w7-dish').forEach(tile => {
+      tile.classList.toggle('on', tile.dataset.id === sel7[dayIdx][mealType]);
+    });
+  }
   // Update day done counter
   const mealTypes = plan7 === '2000'
     ? ['breakfast','lunch','dinner','booster']
     : ['breakfast','lunch','dinner'];
-  const doneCnt = mealTypes.filter(t => sel7[dayIdx][t]).length;
+  const doneCnt = mealTypes.filter(t => t==='booster' ? (sel7[dayIdx].boosters||[]).length>0 : !!sel7[dayIdx][t]).length;
   const complete = doneCnt === mealTypes.length;
   const dayKcal = mealTypes.reduce((sum, t) => {
+    if (t === 'booster') {
+      return sum + (sel7[dayIdx].boosters||[]).reduce((bs,bId) => {
+        const bd=(MENU['booster']||[]).find(x=>x.id===bId); return bs+(bd?bd.kcal:0);
+      }, 0);
+    }
     const d = sel7[dayIdx][t] ? (MENU[t]||[]).find(x=>x.id===sel7[dayIdx][t]) : null;
     return sum + (d ? d.kcal : 0);
   }, 0);
@@ -2438,15 +2487,23 @@ function get7Counts() {
     : ['breakfast','lunch','dinner'];
   let selected = 0;
   const total = 7 * types.length;
-  sel7.forEach(day => types.forEach(t => { if (day[t]) selected++; }));
+  sel7.forEach(day => types.forEach(t => {
+    if (t === 'booster') { if ((day.boosters||[]).length>0) selected++; }
+    else { if (day[t]) selected++; }
+  }));
   return {selected, total};
+}
+
+function get7ExtraBoosterCost() {
+  if (plan7 !== '2000') return 0;
+  return sel7.reduce((sum, day) => sum + Math.max(0, (day.boosters||[]).length - 1) * 120, 0);
 }
 
 function update7Progress() {
   const {selected, total} = get7Counts();
   const scEl = document.getElementById('week-sel-count');
   if (scEl) scEl.textContent = selected;
-  const price = PLAN_PRICE[plan7] * 7;
+  const price = PLAN_PRICE[plan7] * 7 + get7ExtraBoosterCost();
   const el = document.getElementById('week-total-price');
   if (el) el.textContent = price.toLocaleString('ru') + ' ₽';
   const hintEl = document.getElementById('week-progress-hint');
@@ -2540,7 +2597,7 @@ function tryOrder7() {
   const promo = document.getElementById('w7-fPromo').value.trim();
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
   const comment = document.getElementById('w7-fComment').value.trim();
-  const totalPrice = PLAN_PRICE[plan7] * 7;
+  const totalPrice = PLAN_PRICE[plan7] * 7 + get7ExtraBoosterCost();
   const discountAmt7 = applyPromoDiscount(promoData, totalPrice, '7day');
   const finalPrice = Math.max(0, totalPrice - discountAmt7);
 
@@ -2549,6 +2606,13 @@ function tryOrder7() {
     const day = {};
     const card = document.querySelector(`.week-day-card[data-day-idx="${idx}"]`);
     mealTypes.forEach(t => {
+      if (t === 'booster') {
+        const bNames = (sel7[idx].boosters||[]).map(bId => {
+          const m=(MENU['booster']||[]).find(x=>x.id===bId); return m?m.name:'';
+        }).filter(Boolean);
+        if (bNames.length > 0) day[mealLabels[t]] = bNames.join(' + ');
+        return;
+      }
       const dishId = sel7[idx][t];
       if (!dishId) return;
       const menuItem = (MENU[t]||[]).find(x => x.id === dishId);
