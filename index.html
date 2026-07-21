@@ -1570,7 +1570,6 @@ function startPayment() {
   const btn     = document.getElementById('modalPayBtn');
   const loading = document.getElementById('modalPayLoading');
   btn.disabled  = true;
-  loading.textContent = 'Создаём платёж…';
 
   const order  = _pendingPaymentOrder;
   const amount = _pendingPaymentAmount;
@@ -1582,14 +1581,15 @@ function startPayment() {
     phone:       order.phone
   });
 
-  // ── Оплата через ЮКасса (работает и в браузере, и в Telegram Mini App) ──
-  fetch('https://reformaeat.ru/create-payment.php', {
+  function attemptPayment(attemptsLeft) {
+    loading.textContent = attemptsLeft < 2 ? 'Повторяем запрос…' : 'Создаём платёж…';
+    fetch('https://reformaeat.ru/create-payment.php', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: body
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       if (data.ok && data.confirmation_url) {
         localStorage.setItem('rf_success_order', JSON.stringify({
           orderId: String(order.id), name: order.name||'', plan: order.plan||'',
@@ -1597,15 +1597,26 @@ function startPayment() {
           firstDeliveryDate: getDeliveryDateStr()
         }));
         window.location.href = data.confirmation_url;
+      } else if (data.retry && attemptsLeft > 0) {
+        loading.textContent = 'Сервис не ответил, повторяем…';
+        setTimeout(function() { attemptPayment(attemptsLeft - 1); }, 3000);
       } else {
         loading.textContent = '⚠️ ' + (data.error || 'Ошибка. Попробуйте ещё раз.');
         btn.disabled = false;
       }
     })
-    .catch(() => {
-      loading.textContent = '⚠️ Нет соединения. Попробуйте ещё раз.';
-      btn.disabled = false;
+    .catch(function() {
+      if (attemptsLeft > 0) {
+        loading.textContent = 'Нет ответа, повторяем через 3 сек…';
+        setTimeout(function() { attemptPayment(attemptsLeft - 1); }, 3000);
+      } else {
+        loading.textContent = '⚠️ Нет соединения. Попробуйте позже.';
+        btn.disabled = false;
+      }
     });
+  }
+
+  attemptPayment(2); // до 3 попыток суммарно
 }
 
 function closeSuccess() {
