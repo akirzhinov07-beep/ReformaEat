@@ -22,12 +22,22 @@ $name      = $obj['metadata']['name']     ?? '—';
 $phone     = $obj['metadata']['phone']    ?? '—';
 
 function tgSend($token, $chatId, $text) {
-    $url = 'https://api.telegram.org/bot' . $token . '/sendMessage?' . http_build_query([
-        'chat_id'    => $chatId,
-        'text'       => $text,
-        'parse_mode' => 'Markdown'
+    $ch = curl_init('https://api.telegram.org/bot' . $token . '/sendMessage');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'chat_id'    => $chatId,
+            'text'       => $text,
+            'parse_mode' => 'Markdown'
+        ]),
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_SSL_VERIFYPEER => true,
     ]);
-    @file_get_contents($url);
+    $result = curl_exec($ch);
+    if ($result === false) error_log('tgSend curl error: ' . curl_errno($ch));
+    curl_close($ch);
 }
 
 $DAYS_RU   = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];

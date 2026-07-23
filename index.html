@@ -2062,13 +2062,15 @@ function selectPlan(p) {
 function getMoscowNow() {
   return new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
 }
-// Вс–Ср → ближайший четверг; Чт–Сб → ближайшее воскресенье
+// До 14:00 МСК → завтра; после 14:00 → послезавтра; суббота пропускается
 function getFirstDeliveryDate() {
   const msk = getMoscowNow();
+  const hour = msk.getHours() + msk.getMinutes() / 60;
+  const offset = hour < 14 ? 1 : 2;
   const d = new Date(msk);
   d.setHours(0, 0, 0, 0);
-  const dow = msk.getDay(); // 0=Вс … 6=Сб
-  d.setDate(d.getDate() + (dow <= 3 ? 4 - dow : 7 - dow));
+  d.setDate(d.getDate() + offset);
+  if (d.getDay() === 6) d.setDate(d.getDate() + 1); // суббота → воскресенье
   return d;
 }
 function getAutoDeliveryDate() { return getFirstDeliveryDate(); }
@@ -2077,21 +2079,21 @@ function getDeliveryDateStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function renderDeliveryDate() {
-  const dow = getMoscowNow().getDay();
+  const msk = getMoscowNow();
+  const hour = msk.getHours() + msk.getMinutes() / 60;
   const d = getFirstDeliveryDate();
   const dateNum  = d.toLocaleDateString('ru', {day:'numeric', month:'long'});
   const dateWeek = d.toLocaleDateString('ru', {weekday:'long'});
   const notice = document.getElementById('deliveryNotice');
   const badge  = document.getElementById('deliveryDateBadge');
-  if (!notice || !badge) return;
-  if (dow <= 3) {
-    notice.innerHTML = '📅 Заказы, оформленные <b>с воскресенья по среду</b> — первый день доставки в <b>четверг</b>';
-    badge.style.background = 'var(--coral,#ce5b40)';
-  } else {
-    notice.innerHTML = '📅 Заказы, оформленные <b>с четверга по субботу</b> — первый день доставки в <b>воскресенье</b>';
-    badge.style.background = 'var(--ink3,#888)';
+  if (!badge) return;
+  if (notice) {
+    notice.innerHTML = hour < 14
+      ? '⏰ Заказ до 14:00 — привезём <b>завтра</b>'
+      : '⏰ Заказ после 14:00 — привезём <b>послезавтра</b>';
   }
-  badge.textContent = '📅 Доставка первого заказа ' + dateNum + ' (' + dateWeek + ')';
+  badge.style.background = 'var(--blue,#2196f3)';
+  badge.textContent = '📅 Доставка: ' + dateNum + ' (' + dateWeek + ')';
 }
 /* ── PROMO CODES ── */
 const PROMO_CODES = {

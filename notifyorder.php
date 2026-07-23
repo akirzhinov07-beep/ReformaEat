@@ -113,13 +113,27 @@ if ($mode === '7day') {
     }
 }
 
-$result = file_get_contents(
-    'https://api.telegram.org/bot' . TG_TOKEN . '/sendMessage?' . http_build_query([
+$ch = curl_init('https://api.telegram.org/bot' . TG_TOKEN . '/sendMessage');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => http_build_query([
         'chat_id'    => TG_CHAT,
         'text'       => $msg,
         'parse_mode' => 'Markdown'
-    ])
-);
+    ]),
+    CURLOPT_CONNECTTIMEOUT => 8,
+    CURLOPT_TIMEOUT        => 15,
+    CURLOPT_SSL_VERIFYPEER => true,
+]);
+$result   = curl_exec($ch);
+$curlErr  = curl_errno($ch);
+curl_close($ch);
 
+if ($result === false || $curlErr !== 0) {
+    error_log('notifyorder.php TG error: ' . $curlErr);
+    echo json_encode(['ok' => false, 'error' => 'telegram_unreachable']);
+    exit;
+}
 $resp = json_decode($result, true);
 echo json_encode(['ok' => $resp['ok'] ?? false]);
