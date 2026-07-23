@@ -1995,8 +1995,12 @@ function updateHint(allDish, done, rem) {
   const allDishDone = done===(plan==='2000' ? 4 : 3);
   const name=document.getElementById('fName').value.trim();
   const phone=getPhone();
+  const city=document.getElementById('fCity')?.value.trim()||'';
+  const street=document.getElementById('fStreet')?.value.trim()||'';
+  const house=document.getElementById('fHouse')?.value.trim()||'';
+  const chkOferta=document.getElementById('chkOferta')?.checked;
+  const chkPd=document.getElementById('chkPd')?.checked;
   const hint=document.getElementById('orderHint');
-  // Highlight missing sections
   document.getElementById('fName').style.borderColor = (!name && allDishDone) ? 'var(--coral)' : '';
   document.getElementById('fPhone').style.borderColor = (phone.length<10 && allDishDone && name) ? 'var(--coral)' : '';
   if (!allDishDone) {
@@ -2007,6 +2011,12 @@ function updateHint(allDish, done, rem) {
     hint.style.color='var(--coral)';
   } else if (phone.length<10) {
     hint.textContent = '📞 Введи номер телефона полностью';
+    hint.style.color='var(--coral)';
+  } else if (!city||!street||!house) {
+    hint.textContent = '🏠 Укажи адрес доставки (город, улица, дом)';
+    hint.style.color='var(--coral)';
+  } else if (!chkOferta||!chkPd) {
+    hint.textContent = '☑️ Подтверди согласие с документами';
     hint.style.color='var(--coral)';
   } else {
     hint.textContent = '✓ Всё готово — оформляй!';
