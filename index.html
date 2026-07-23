@@ -2144,19 +2144,19 @@ function checkPromo() {
   }
   if (p.oneTime) {
     const phone = getPhone();
-    if (phone.length < 10) {
-      hint.textContent = 'Введите телефон, чтобы проверить промокод'; hint.style.color = 'var(--ink3)'; return null;
-    }
-    const key = phone + ':' + val;
-    if (_promoOneTimeCache.hasOwnProperty(key)) {
-      if (_promoOneTimeCache[key]) {
-        hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+    if (phone.length >= 10) {
+      const key = phone + ':' + val;
+      if (_promoOneTimeCache.hasOwnProperty(key)) {
+        if (_promoOneTimeCache[key]) {
+          hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+        }
+      } else {
+        hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
+        _triggerPromoCheck(val, phone, function() { checkPromo(); updateCalc(); });
+        return null;
       }
-      hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
     }
-    hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
-    _triggerPromoCheck(val, phone, function() { checkPromo(); updateCalc(); });
-    return null;
+    hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
   }
   hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
 }
@@ -2601,19 +2601,19 @@ function checkPromo7() {
   }
   if (p.oneTime) {
     const phone = getPhone7();
-    if (phone.length < 10) {
-      hint.textContent = 'Введите телефон, чтобы проверить промокод'; hint.style.color = 'var(--ink3)'; return null;
-    }
-    const key = phone + ':' + val;
-    if (_promoOneTimeCache.hasOwnProperty(key)) {
-      if (_promoOneTimeCache[key]) {
-        hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+    if (phone.length >= 10) {
+      const key = phone + ':' + val;
+      if (_promoOneTimeCache.hasOwnProperty(key)) {
+        if (_promoOneTimeCache[key]) {
+          hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+        }
+      } else {
+        hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
+        _triggerPromoCheck(val, phone, function() { checkPromo7(); update7Progress(); });
+        return null;
       }
-      hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
     }
-    hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
-    _triggerPromoCheck(val, phone, function() { checkPromo7(); update7Progress(); });
-    return null;
+    hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
   }
   hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
 }
