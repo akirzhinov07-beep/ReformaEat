@@ -5,6 +5,7 @@
  * https://reformaeat.ru/payment-webhook.php
  */
 require_once __DIR__ . '/payment-config.php';
+require_once __DIR__ . '/promo-store.php';
 
 $input = file_get_contents('php://input');
 $event = json_decode($input, true);
@@ -52,6 +53,13 @@ if ($event['event'] === 'payment.succeeded') {
     }
 
     if ($orderData) {
+        // Помечаем одноразовый промокод как использованный после подтверждённой оплаты
+        $oPromoCheck = $orderData['promo'] ?? '';
+        $oPhoneCheck = $orderData['phone'] ?? $phone;
+        if ($oPromoCheck && promoIsOneTime($oPromoCheck)) {
+            promoMarkUsed($oPhoneCheck, $oPromoCheck);
+        }
+
         date_default_timezone_set('Europe/Moscow');
         $now     = new DateTime();
         $dow     = (int)$now->format('w');

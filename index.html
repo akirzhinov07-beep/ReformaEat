@@ -2027,6 +2027,8 @@ function formatPhone(el) {
   el.value=out;
   updateOrderBtn();
   updateCalc();
+  const pv = document.getElementById('fPromo')?.value.trim().toUpperCase();
+  if (pv && PROMO_CODES[pv]?.oneTime) checkPromo();
 }
 ['input','change','blur'].forEach(ev=>
   document.getElementById('fName').addEventListener(ev,()=>{updateOrderBtn();}));
@@ -2098,7 +2100,23 @@ const PROMO_CODES = {
   'PROMO95':     {percent: 95, mode: '7day', label: 'скидка 95% на рацион 7 дней'},
   'REFORMA10':   {finalPrice: 100, finalPrice7: 700, label: 'тестовый заказ: 100 ₽ / 700 ₽ на 7 дней'},
   'DISCOUNT+':   {finalPrice: 70, finalPrice7: 70, label: 'итого 70 ₽'},
+  'SALE15':      {percent: 15, label: 'скидка 15%', oneTime: true},
 };
+
+// Кэш результатов проверки одноразовых промокодов: "PHONE:PROMO" → true(использован) | false(не использован)
+const _promoOneTimeCache = {};
+
+function _triggerPromoCheck(promo, phone, onDone) {
+  const key = phone + ':' + promo;
+  if (_promoOneTimeCache.hasOwnProperty(key)) { if (onDone) onDone(); return; }
+  fetch('https://reformaeat.ru/promo-used.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'check', phone, promo})
+  })
+  .then(r => r.json())
+  .then(data => { _promoOneTimeCache[key] = data.used === true; if (onDone) onDone(); })
+  .catch(() => { _promoOneTimeCache[key] = false; if (onDone) onDone(); }); // fail open
+}
 
 function applyPromoDiscount(promoData, totalPrice, mode) {
   if (!promoData) return 0;
@@ -2118,19 +2136,29 @@ function checkPromo() {
   const hint = document.getElementById('promoHint');
   if (!val) { hint.textContent=''; hint.style.color=''; return null; }
   const p = PROMO_CODES[val];
-  if (p && !p.mode) {
-    hint.textContent = '✓ Промокод принят: ' + p.label;
-    hint.style.color = '#2e7d32';
-    return p;
-  } else if (p && p.mode) {
-    hint.textContent = '✗ Этот промокод только для заказа на 7 дней';
-    hint.style.color = '#ce5b40';
-    return null;
-  } else {
-    hint.textContent = '✗ Промокод не найден';
-    hint.style.color = '#ce5b40';
+  if (!p) {
+    hint.textContent = '✗ Промокод не найден'; hint.style.color = '#ce5b40'; return null;
+  }
+  if (p.mode && p.mode !== '1day') {
+    hint.textContent = '✗ Этот промокод только для заказа на 7 дней'; hint.style.color = '#ce5b40'; return null;
+  }
+  if (p.oneTime) {
+    const phone = getPhone();
+    if (phone.length < 10) {
+      hint.textContent = 'Введите телефон, чтобы проверить промокод'; hint.style.color = 'var(--ink3)'; return null;
+    }
+    const key = phone + ':' + val;
+    if (_promoOneTimeCache.hasOwnProperty(key)) {
+      if (_promoOneTimeCache[key]) {
+        hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+      }
+      hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
+    }
+    hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
+    _triggerPromoCheck(val, phone, function() { checkPromo(); updateCalc(); });
     return null;
   }
+  hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
 }
 
 /* ── RUSSIAN ONLY INPUT ── */
@@ -2154,6 +2182,20 @@ function tryOrder() {
   const comment=document.getElementById('fComment').value.trim();
   const promo=document.getElementById('fPromo').value.trim();
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
+  if (promoData && promoData.oneTime) {
+    const key = phone + ':' + promo.toUpperCase();
+    if (_promoOneTimeCache[key] === true) {
+      const h = document.getElementById('promoHint');
+      if (h) { h.textContent = '✗ Промокод больше не действителен'; h.style.color = '#ce5b40'; }
+      return;
+    }
+    if (!_promoOneTimeCache.hasOwnProperty(key)) {
+      const h = document.getElementById('promoHint');
+      if (h) { h.textContent = 'Проверяем промокод…'; h.style.color = 'var(--ink3)'; }
+      _triggerPromoCheck(promo.toUpperCase(), phone, function() { tryOrder(); });
+      return;
+    }
+  }
   if(comment) lines+=`Комментарий: ${comment}<br>`;
   if(promo) {
     if(promoData) lines+=`Промокод: <strong>${promo}</strong> (${promoData.label})<br>`;
@@ -2546,21 +2588,34 @@ function formatPhone7(el) {
   if (v.length >= 9) out += '-' + v.slice(8,10);
   el.value = out;
   updateOrderBtn7();
+  const pv7 = document.getElementById('w7-fPromo')?.value.trim().toUpperCase();
+  if (pv7 && PROMO_CODES[pv7]?.oneTime) checkPromo7();
 }
 function checkPromo7() {
   const val = document.getElementById('w7-fPromo').value.trim().toUpperCase();
   const hint = document.getElementById('w7-promoHint');
   if (!val) { hint.textContent=''; return null; }
   const p = PROMO_CODES[val];
-  if (p && (!p.mode || p.mode === '7day')) {
-    hint.textContent = '✓ Промокод принят: ' + p.label;
-    hint.style.color = '#2e7d32';
-    return p;
-  } else {
-    hint.textContent = '✗ Промокод не найден';
-    hint.style.color = '#ce5b40';
+  if (!p || (p.mode && p.mode !== '7day')) {
+    hint.textContent = '✗ Промокод не найден'; hint.style.color = '#ce5b40'; return null;
+  }
+  if (p.oneTime) {
+    const phone = getPhone7();
+    if (phone.length < 10) {
+      hint.textContent = 'Введите телефон, чтобы проверить промокод'; hint.style.color = 'var(--ink3)'; return null;
+    }
+    const key = phone + ':' + val;
+    if (_promoOneTimeCache.hasOwnProperty(key)) {
+      if (_promoOneTimeCache[key]) {
+        hint.textContent = '✗ Промокод больше не действителен'; hint.style.color = '#ce5b40'; return null;
+      }
+      hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
+    }
+    hint.textContent = 'Проверяем промокод…'; hint.style.color = 'var(--ink3)';
+    _triggerPromoCheck(val, phone, function() { checkPromo7(); update7Progress(); });
     return null;
   }
+  hint.textContent = '✓ Промокод принят: ' + p.label; hint.style.color = '#2e7d32'; return p;
 }
 function updateOrderBtn7() {
   const {selected, total} = get7Counts();
@@ -2615,6 +2670,20 @@ function tryOrder7() {
 
   const promo = document.getElementById('w7-fPromo').value.trim();
   const promoData = promo ? PROMO_CODES[promo.toUpperCase()] : null;
+  if (promoData && promoData.oneTime) {
+    const key = phone + ':' + promo.toUpperCase();
+    if (_promoOneTimeCache[key] === true) {
+      const h = document.getElementById('w7-promoHint');
+      if (h) { h.textContent = '✗ Промокод больше не действителен'; h.style.color = '#ce5b40'; }
+      return;
+    }
+    if (!_promoOneTimeCache.hasOwnProperty(key)) {
+      const h = document.getElementById('w7-promoHint');
+      if (h) { h.textContent = 'Проверяем промокод…'; h.style.color = 'var(--ink3)'; }
+      _triggerPromoCheck(promo.toUpperCase(), phone, function() { tryOrder7(); });
+      return;
+    }
+  }
   const comment = document.getElementById('w7-fComment').value.trim();
   const totalPrice = PLAN_PRICE[plan7] * 7 + get7ExtraBoosterCost();
   const discountAmt7 = applyPromoDiscount(promoData, totalPrice, '7day');
