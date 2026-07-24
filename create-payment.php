@@ -19,6 +19,115 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo js
 
 require_once __DIR__ . '/payment-config.php';
 
+function _tgNotifyOrder(array $order): void {
+    $DAYS_RU   = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    $MONTHS_RU = ['января','февраля','марта','апреля','мая','июня',
+                   'июля','августа','сентября','октября','ноября','декабря'];
+
+    date_default_timezone_set('Europe/Moscow');
+    $now     = new DateTime();
+    $dow     = (int)$now->format('w');
+    $day     = (int)$now->format('j');
+    $month   = (int)$now->format('n') - 1;
+    $orderAt = $DAYS_RU[$dow] . ', ' . $day . ' ' . $MONTHS_RU[$month]
+             . ' ' . $now->format('Y') . ' в ' . $now->format('H:i');
+
+    $mode    = $order['mode']    ?? '1day';
+    $name    = $order['name']    ?? '—';
+    $phone   = $order['phone']   ?? '—';
+    $city    = $order['city']    ?? '';
+    $street  = $order['street']  ?? '';
+    $house   = $order['house']   ?? '';
+    $apt     = $order['apt']     ?? '';
+    $comment = $order['comment'] ?? '';
+    $promo   = $order['promo']   ?? '';
+    $discount= $order['discount'] ?? 0;
+
+    if ($mode === '7day') {
+        $plan       = $order['plan']       ?? '';
+        $totalPrice = $order['totalPrice'] ?? 0;
+        $days       = $order['days']       ?? [];
+
+        $msg = "🗓 *Заказ на 7 дней — reForma Eat*\n\n"
+             . "📋 Оформлен: {$orderAt}\n\n"
+             . "👤 {$name}\n"
+             . "📞 {$phone}\n"
+             . "🥗 План: {$plan}\n"
+             . "💰 Сумма: " . number_format((float)$totalPrice, 0, '.', ' ') . " ₽\n";
+
+        if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
+        if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . ($apt ? ", кв. {$apt}" : '') . "\n";
+        if ($comment) $msg .= "💬 {$comment}\n";
+        $msg .= "\n";
+
+        foreach ($days as $wd) {
+            $dateStr = $wd['date'] ?? '';
+            if ($dateStr) {
+                $d      = new DateTime($dateStr . 'T00:00:00');
+                $wdow   = (int)$d->format('w');
+                $wday   = (int)$d->format('j');
+                $wmonth = (int)$d->format('n') - 1;
+                $label  = $DAYS_RU[$wdow] . ', ' . $wday . ' ' . $MONTHS_RU[$wmonth];
+            } else {
+                $label = $dateStr;
+            }
+            $msg .= "📅 *{$label}:*\n";
+            foreach (($wd['dishes'] ?? []) as $type => $dish) {
+                $msg .= "  • {$type}: {$dish}\n";
+            }
+            $msg .= "\n";
+        }
+    } else {
+        $plan         = $order['plan']         ?? '';
+        $deliveryDate = $order['deliveryDate'] ?? '';
+        $dishes       = $order['dishes']       ?? [];
+
+        $deliveryLabel = $deliveryDate;
+        if ($deliveryDate) {
+            $dd      = new DateTime($deliveryDate . 'T00:00:00');
+            $ddow    = (int)$dd->format('w');
+            $dday    = (int)$dd->format('j');
+            $dmonth  = (int)$dd->format('n') - 1;
+            $deliveryLabel = $DAYS_RU[$ddow] . ', ' . $dday . ' ' . $MONTHS_RU[$dmonth];
+        }
+
+        $msg = "🍽 *Новый заказ reForma Eat (1 день)*\n\n"
+             . "📋 Оформлен: {$orderAt}\n\n"
+             . "👤 {$name}\n"
+             . "📞 {$phone}\n"
+             . "📅 Доставка: {$deliveryLabel}\n"
+             . "🥗 План: {$plan}\n";
+
+        if ($city)    $msg .= "📍 {$city}" . ($street ? ", {$street}" : '') . ($house ? ", д. {$house}" : '') . ($apt ? ", кв. {$apt}" : '') . "\n";
+        if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
+        if ($comment) $msg .= "💬 {$comment}\n";
+
+        $msg .= "\n*Блюда:*\n";
+        if (is_array($dishes)) {
+            foreach ($dishes as $type => $dish) {
+                $msg .= "  • {$type}: {$dish}\n";
+            }
+        }
+    }
+
+    $ch = curl_init('https://api.telegram.org/bot' . TG_TOKEN . '/sendMessage');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'chat_id'    => TG_CHAT,
+            'text'       => $msg,
+            'parse_mode' => 'Markdown'
+        ]),
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $tgResult = curl_exec($ch);
+    if ($tgResult === false) error_log('create-payment tgNotify error: ' . curl_errno($ch));
+    curl_close($ch);
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 if (!$data) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'Invalid JSON']); exit; }
 
@@ -106,6 +215,7 @@ if ($response === false || $curlErrno !== 0) {
 $result = json_decode($response, true);
 
 if ($httpCode === 200 && isset($result['confirmation']['confirmation_url'])) {
+    _tgNotifyOrder($fullOrder);
     echo json_encode([
         'ok'               => true,
         'payment_id'       => $result['id'],
