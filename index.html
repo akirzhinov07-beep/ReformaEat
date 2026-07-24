@@ -1365,7 +1365,6 @@ nav{
           <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">350 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Чегем</span><span class="delivery-cost-price">250 ₽</span></div>
         </div>
-        <div class="cal-notice" id="deliveryNotice" style="padding:10px 0 4px"></div>
         <div class="delivery-date-badge" id="deliveryDateBadge"></div>
       </div>
     </div>
@@ -1473,7 +1472,6 @@ nav{
         </div>
       </div>
       <div class="form-section">
-        <div class="cal-notice" id="w7-delivery-notice" style="display:none"></div>
         <div class="delivery-date-badge" id="w7-delivery-badge" style="display:none;margin-bottom:12px"></div>
         <div class="delivery-costs-block">
           <div class="delivery-costs-title">🚚 Доставка</div>
@@ -1507,6 +1505,7 @@ nav{
     <h2 id="modalTitle">Заказ сформирован</h2>
     <div class="modal-summary" id="modalSummary"></div>
     <div class="modal-price-big" id="modalPrice"></div>
+    <p style="font-size:13px;color:#888;margin:0 0 16px">🚚 Доставка оплачивается отдельно курьеру</p>
     <button class="modal-pay-btn" id="modalPayBtn" onclick="startPayment()">Оплатить</button>
     <div class="modal-pay-loading" id="modalPayLoading"></div>
     <button class="modal-cancel-btn" onclick="closeModal()">Отмена</button>
@@ -2097,11 +2096,7 @@ function renderDeliveryDate() {
   const notice = document.getElementById('deliveryNotice');
   const badge  = document.getElementById('deliveryDateBadge');
   if (!badge) return;
-  if (notice) {
-    notice.innerHTML = hour < 14
-      ? '⏰ Заказ до 14:00 — привезём <b>завтра</b>'
-      : '⏰ Заказ после 14:00 — привезём <b>послезавтра</b>';
-  }
+
   badge.style.background = 'var(--blue,#2196f3)';
   badge.textContent = '📅 Доставка: ' + dateNum + ' (' + dateWeek + ')';
 }
@@ -2414,14 +2409,6 @@ function build7DayUI() {
   // Обновляем уведомление о расписании доставок
   const w7Notice = document.getElementById('w7-delivery-notice');
   const w7Badge  = document.getElementById('w7-delivery-badge');
-  if (w7Notice && dates.length === 7) {
-    const dow7 = getMoscowNow().getDay();
-    const rule = dow7 <= 3
-      ? '📅 Заказы, оформленные <b>с воскресенья по среду</b> — первый день доставки в <b>четверг</b>'
-      : '📅 Заказы, оформленные <b>с четверга по субботу</b> — первый день доставки в <b>воскресенье</b>';
-    w7Notice.innerHTML = rule;
-    w7Notice.style.display = '';
-  }
   if (w7Badge && dates.length === 7) {
     const dow7 = getMoscowNow().getDay();
     w7Badge.style.background = dow7 <= 3 ? 'var(--coral,#ce5b40)' : 'var(--ink3,#888)';
