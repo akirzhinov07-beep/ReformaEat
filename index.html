@@ -2121,7 +2121,7 @@ const _promoOneTimeCache = {};
 function _triggerPromoCheck(promo, phone, onDone) {
   const key = phone + ':' + promo;
   if (_promoOneTimeCache.hasOwnProperty(key)) { if (onDone) onDone(); return; }
-  fetch('https://reformaeat.ru/promo-used.php', {
+  fetch('https://reformaeat.ru/promoused.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({action: 'check', phone, promo})
   })

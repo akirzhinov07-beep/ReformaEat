@@ -5,7 +5,7 @@
  * https://reformaeat.ru/payment-webhook.php
  */
 require_once __DIR__ . '/payment-config.php';
-require_once __DIR__ . '/promo-store.php';
+require_once __DIR__ . '/promostore.php';
 
 $input = file_get_contents('php://input');
 $event = json_decode($input, true);
