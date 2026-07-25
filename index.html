@@ -2069,7 +2069,8 @@ function selectPlan(p) {
 }
 /* ── DELIVERY DATE ── */
 function getMoscowNow() {
-  return new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Moscow'}));
+  const now = new Date();
+  return new Date(now.getTime() + (now.getTimezoneOffset() + 180) * 60000);
 }
 // До 14:00 МСК → завтра; после 14:00 → послезавтра; суббота пропускается
 function getFirstDeliveryDate() {

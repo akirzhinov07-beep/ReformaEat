@@ -48,7 +48,7 @@ function _tgNotifyOrder(array $order): void {
         $totalPrice = $order['totalPrice'] ?? 0;
         $days       = $order['days']       ?? [];
 
-        $msg = "🗓 *Заказ на 7 дней — reForma Eat*\n\n"
+        $msg = "🗓 <b>Заказ на 7 дней — reForma Eat</b>\n\n"
              . "📋 Оформлен: {$orderAt}\n\n"
              . "👤 {$name}\n"
              . "📞 {$phone}\n"
@@ -71,7 +71,7 @@ function _tgNotifyOrder(array $order): void {
             } else {
                 $label = $dateStr;
             }
-            $msg .= "📅 *{$label}:*\n";
+            $msg .= "📅 <b>{$label}:</b>\n";
             foreach (($wd['dishes'] ?? []) as $type => $dish) {
                 $msg .= "  • {$type}: {$dish}\n";
             }
@@ -91,7 +91,7 @@ function _tgNotifyOrder(array $order): void {
             $deliveryLabel = $DAYS_RU[$ddow] . ', ' . $dday . ' ' . $MONTHS_RU[$dmonth];
         }
 
-        $msg = "🍽 *Новый заказ reForma Eat (1 день)*\n\n"
+        $msg = "🍽 <b>Новый заказ reForma Eat (1 день)</b>\n\n"
              . "📋 Оформлен: {$orderAt}\n\n"
              . "👤 {$name}\n"
              . "📞 {$phone}\n"
@@ -102,7 +102,7 @@ function _tgNotifyOrder(array $order): void {
         if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
         if ($comment) $msg .= "💬 {$comment}\n";
 
-        $msg .= "\n*Блюда:*\n";
+        $msg .= "\n<b>Блюда:</b>\n";
         if (is_array($dishes)) {
             foreach ($dishes as $type => $dish) {
                 $msg .= "  • {$type}: {$dish}\n";
@@ -117,15 +117,23 @@ function _tgNotifyOrder(array $order): void {
         CURLOPT_POSTFIELDS     => http_build_query([
             'chat_id'    => TG_CHAT,
             'text'       => $msg,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'HTML'
         ]),
         CURLOPT_CONNECTTIMEOUT => 5,
         CURLOPT_TIMEOUT        => 10,
         CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $tgResult = curl_exec($ch);
-    if ($tgResult === false) error_log('create-payment tgNotify error: ' . curl_errno($ch));
+    $tgErrno  = curl_errno($ch);
     curl_close($ch);
+    if ($tgResult === false) {
+        error_log('create-payment tgNotify curl error: ' . $tgErrno);
+    } else {
+        $tgResp = json_decode($tgResult, true);
+        if (!($tgResp['ok'] ?? false)) {
+            error_log('create-payment tgNotify API error: ' . $tgResult);
+        }
+    }
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
