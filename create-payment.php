@@ -223,7 +223,6 @@ if ($response === false || $curlErrno !== 0) {
 $result = json_decode($response, true);
 
 if ($httpCode === 200 && isset($result['confirmation']['confirmation_url'])) {
-    _tgNotifyOrder($fullOrder);
     echo json_encode([
         'ok'               => true,
         'payment_id'       => $result['id'],

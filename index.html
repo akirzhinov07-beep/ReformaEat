@@ -2273,6 +2273,12 @@ function tryOrder() {
       localStorage.setItem('rf_returning','1');
     }catch(e){}
     saveOrderToCloud(_pendingPaymentOrder);
+    fetch('https://reformaeat.ru/notifyorder.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(_pendingPaymentOrder),
+      keepalive: true
+    }).catch(function(){});
   })();
 }
 function closeModal() {
@@ -2779,6 +2785,12 @@ function tryOrder7() {
       localStorage.setItem('rf_returning','1');
     } catch(e) {}
     saveOrderToCloud(_pendingPaymentOrder);
+    fetch('https://reformaeat.ru/notifyorder.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(_pendingPaymentOrder),
+      keepalive: true
+    }).catch(function(){});
   })();
 }
 
