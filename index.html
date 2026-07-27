@@ -1230,6 +1230,7 @@ nav{
         <div class="plan-opt-price" id="w1-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽</div>
       </button>
     </div>
+    <div id="deliveryInfoBanner" style="background:var(--blue,#2196f3);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;display:none"></div>
     <div class="meal-block" data-meal="breakfast">
       <div class="meal-title-row">
         <div class="meal-dot"></div>
@@ -1361,9 +1362,11 @@ nav{
           <div class="delivery-costs-title">🚚 Доставка</div>
           <div class="delivery-costs-subtitle">Оплачивается отдельно курьеру при получении</div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">150 ₽</span></div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">250 ₽</span></div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">350 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">400 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Чегем</span><span class="delivery-cost-price">250 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Шалушка</span><span class="delivery-cost-price">200 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нартан</span><span class="delivery-cost-price">200 ₽</span></div>
         </div>
         <div class="delivery-date-badge" id="deliveryDateBadge"></div>
       </div>
@@ -1477,9 +1480,11 @@ nav{
           <div class="delivery-costs-title">🚚 Доставка</div>
           <div class="delivery-costs-subtitle">Оплачивается отдельно курьеру при получении</div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">150 ₽</span></div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">250 ₽</span></div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">350 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">400 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Чегем</span><span class="delivery-cost-price">250 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Шалушка</span><span class="delivery-cost-price">200 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нартан</span><span class="delivery-cost-price">200 ₽</span></div>
         </div>
       </div>
       <div class="calc-bottom">
@@ -2089,17 +2094,19 @@ function getDeliveryDateStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function renderDeliveryDate() {
-  const msk = getMoscowNow();
-  const hour = msk.getHours() + msk.getMinutes() / 60;
   const d = getFirstDeliveryDate();
   const dateNum  = d.toLocaleDateString('ru', {day:'numeric', month:'long'});
   const dateWeek = d.toLocaleDateString('ru', {weekday:'long'});
-  const notice = document.getElementById('deliveryNotice');
   const badge  = document.getElementById('deliveryDateBadge');
-  if (!badge) return;
-
-  badge.style.background = 'var(--blue,#2196f3)';
-  badge.textContent = '📅 Доставка: ' + dateNum + ' (' + dateWeek + ')';
+  if (badge) {
+    badge.style.background = 'var(--blue,#2196f3)';
+    badge.textContent = '📅 Доставка: ' + dateNum + ' (' + dateWeek + ')';
+  }
+  const banner = document.getElementById('deliveryInfoBanner');
+  if (banner) {
+    banner.innerHTML = '📅 Доставка: <b>' + dateNum + ' (' + dateWeek + ')</b> · 🕕 18:30–21:30';
+    banner.style.display = '';
+  }
 }
 /* ── PROMO CODES ── */
 const PROMO_CODES = {
@@ -2338,7 +2345,7 @@ function backToMode() {
 let plan7 = '1600';
 let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
 const PLAN_PRICE = {'1600':1390, '2000':1520};
-const DELIVERY_COSTS = {'нальчик':150,'нарткала':250,'баксан':350,'чегем':250};
+const DELIVERY_COSTS = {'нальчик':150,'нарткала':400,'баксан':400,'чегем':250,'шалушка':200,'нартан':200};
 function getDeliveryCost(city) {
   return DELIVERY_COSTS[(city||'').toLowerCase().trim()] || 150;
 }
@@ -2373,8 +2380,23 @@ function populateSuccessModal(oid) {
 const DAYS_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const MONTHS_SHORT_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 
+function get7DayStartDate() {
+  const msk = getMoscowNow();
+  const dow = msk.getDay(); // 0=вс, 1=пн, ..., 6=сб
+  const d = new Date(msk);
+  d.setHours(0, 0, 0, 0);
+  if (dow <= 3) {
+    // Вс-Ср: первая доставка четверг вечером, первый день питания — пятница
+    d.setDate(d.getDate() + (5 - dow + 7) % 7);
+  } else {
+    // Чт-Сб: первая доставка воскресенье вечером, первый день питания — понедельник
+    d.setDate(d.getDate() + (1 - dow + 7) % 7);
+  }
+  return d;
+}
+
 function get7DayDates() {
-  const start = getFirstDeliveryDate();
+  const start = get7DayStartDate();
   const dates = [];
   const cur = new Date(start);
   while (dates.length < 7) {
