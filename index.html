@@ -2077,11 +2077,11 @@ function getMoscowNow() {
   const now = new Date();
   return new Date(now.getTime() + (now.getTimezoneOffset() + 180) * 60000);
 }
-// До 14:00 МСК → завтра; после 14:00 → послезавтра; суббота пропускается
+// До 12:00 МСК → сегодня; после 12:00 → завтра; суббота пропускается
 function getFirstDeliveryDate() {
   const msk = getMoscowNow();
   const hour = msk.getHours() + msk.getMinutes() / 60;
-  const offset = hour < 14 ? 1 : 2;
+  const offset = hour < 12 ? 0 : 1;
   const d = new Date(msk);
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + offset);
