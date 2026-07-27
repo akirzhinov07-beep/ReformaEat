@@ -2441,8 +2441,10 @@ function build7DayUI() {
   if (w7Badge && dates.length === 7) {
     const dow7 = getMoscowNow().getDay();
     w7Badge.style.background = dow7 <= 3 ? 'var(--coral,#ce5b40)' : 'var(--ink3,#888)';
-    const firstDateNum  = dates[0].toLocaleDateString('ru', {day:'numeric', month:'long'});
-    const firstDateWeek = dates[0].toLocaleDateString('ru', {weekday:'long'});
+    const deliveryDay = new Date(dates[0]);
+    deliveryDay.setDate(deliveryDay.getDate() - 1); // доставка вечером накануне
+    const firstDateNum  = deliveryDay.toLocaleDateString('ru', {day:'numeric', month:'long'});
+    const firstDateWeek = deliveryDay.toLocaleDateString('ru', {weekday:'long'});
     w7Badge.textContent = '📅 Доставка первого заказа ' + firstDateNum + ' (' + firstDateWeek + ')';
     w7Badge.style.display = '';
   }
