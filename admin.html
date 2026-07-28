@@ -892,8 +892,7 @@ function buildDeliveryCalendar() {
   const orders = window._calOrders || [];
   const todayBase = new Date();
   todayBase.setHours(0, 0, 0, 0);
-  const _lds = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  const todayStr = _lds(todayBase);
+  const todayStr = todayBase.toISOString().slice(0, 10);
 
   const start = new Date(todayBase);
   start.setDate(start.getDate() + _calOffset);
@@ -911,7 +910,7 @@ function buildDeliveryCalendar() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    dateMap[_lds(d)] = [];
+    dateMap[d.toISOString().slice(0, 10)] = [];
   }
 
   orders.filter(o => o.paid !== false).forEach(o => {
@@ -940,7 +939,7 @@ function buildDeliveryCalendar() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const key = _lds(d);
+    const key = d.toISOString().slice(0, 10);
     const isToday = key === todayStr;
     const clients = dateMap[key] || [];
 

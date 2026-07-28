@@ -65,7 +65,8 @@ if ($mode === '7day') {
     foreach ($days as $wd) {
         $dateStr = $wd['date'] ?? '';
         if ($dateStr) {
-            $d      = new DateTime($dateStr . 'T00:00:00');
+            $d = new DateTime($dateStr . 'T00:00:00');
+            $d->modify('+1 day'); // даты хранятся в UTC, +1 → московский день
             $wdow   = (int)$d->format('w');
             $wday   = (int)$d->format('j');
             $wmonth = (int)$d->format('n') - 1;

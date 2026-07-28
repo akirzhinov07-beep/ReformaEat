@@ -2738,7 +2738,7 @@ function tryOrder7() {
         if (nameEl) day[mealLabels[t]] = nameEl.textContent;
       }
     });
-    return {date: date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0'), dishes: day};
+    return {date: date.toISOString().slice(0,10), dishes: day};
   });
 
   let lines = `<strong>${name}</strong> · +7 ${document.getElementById('w7-fPhone').value}<br>`;
