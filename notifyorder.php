@@ -49,7 +49,7 @@ if ($mode === '7day') {
     $totalPrice = $data['totalPrice'] ?? 0;
     $days       = $data['days']       ?? [];
 
-    $msg = "🗓 *Заказ на 7 дней — reForma Eat*\n\n"
+    $msg = "🗓 <b>Заказ на 7 дней — reForma Eat</b>\n\n"
          . "📋 Оформлен: {$orderAt}\n\n"
          . "👤 {$name}\n"
          . "📞 {$phone}\n"
@@ -63,7 +63,7 @@ if ($mode === '7day') {
     $msg .= "\n";
 
     foreach ($days as $wd) {
-        $dateStr = $wd['date'] ?? ''; // "2026-05-13"
+        $dateStr = $wd['date'] ?? '';
         if ($dateStr) {
             $d      = new DateTime($dateStr . 'T00:00:00');
             $wdow   = (int)$d->format('w');
@@ -73,7 +73,7 @@ if ($mode === '7day') {
         } else {
             $label = $dateStr;
         }
-        $msg .= "📅 *{$label}:*\n";
+        $msg .= "📅 <b>{$label}:</b>\n";
         foreach (($wd['dishes'] ?? []) as $type => $dish) {
             $msg .= "  • {$type}: {$dish}\n";
         }
@@ -86,7 +86,6 @@ if ($mode === '7day') {
     $deliveryDate = $data['deliveryDate'] ?? '';
     $dishes       = $data['dishes']       ?? [];
 
-    // Форматируем дату доставки
     $deliveryLabel = $deliveryDate;
     if ($deliveryDate) {
         $dd      = new DateTime($deliveryDate . 'T00:00:00');
@@ -96,7 +95,7 @@ if ($mode === '7day') {
         $deliveryLabel = $DAYS_RU[$ddow] . ', ' . $dday . ' ' . $MONTHS_RU[$dmonth];
     }
 
-    $msg = "🍽 *Новый заказ reForma Eat (1 день)*\n\n"
+    $msg = "🍽 <b>Новый заказ reForma Eat (1 день)</b>\n\n"
          . "📋 Оформлен: {$orderAt}\n\n"
          . "👤 {$name}\n"
          . "📞 {$phone}\n"
@@ -107,7 +106,7 @@ if ($mode === '7day') {
     if ($promo)   $msg .= "🎟 Промокод: {$promo}" . ($discount ? " (−{$discount} ₽)" : '') . "\n";
     if ($comment) $msg .= "💬 {$comment}\n";
 
-    $msg .= "\n*Блюда:*\n";
+    $msg .= "\n<b>Блюда:</b>\n";
     foreach ($dishes as $type => $dish) {
         $msg .= "  • {$type}: {$dish}\n";
     }
@@ -120,7 +119,7 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS     => http_build_query([
         'chat_id'    => TG_CHAT,
         'text'       => $msg,
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'HTML'
     ]),
     CURLOPT_CONNECTTIMEOUT => 8,
     CURLOPT_TIMEOUT        => 15,
