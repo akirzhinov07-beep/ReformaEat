@@ -172,6 +172,9 @@
   .cal-meal-val { color:#2d2d2d; line-height:1.4; }
   .cal-no-dishes { font-size:12px; color:#bbb; font-style:italic; }
   .cal-comment { font-size:12px; color:#888; margin-top:8px; border-top:1px solid #f0ede8; padding-top:6px; }
+  .cal-card { cursor: grab; }
+  .cal-card:active { cursor: grabbing; }
+  .cal-day.drag-over { background: rgba(206,91,64,.08); border-radius: 8px; outline: 2px dashed #ce5b40; }
 
   /* ── ЗАКУП И СЕБЕСТОИМОСТЬ ── */
   .costs-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
@@ -889,6 +892,9 @@ function buildDeliveryCalendar() {
   const body = document.getElementById('cal-body');
   if (!body) return;
 
+  let calOverrides = {};
+  try { calOverrides = JSON.parse(localStorage.getItem('rf_cal_override_v1') || '{}'); } catch(e) {}
+
   const orders = window._calOrders || [];
   const todayBase = new Date();
   todayBase.setHours(0, 0, 0, 0);
@@ -919,16 +925,31 @@ function buildDeliveryCalendar() {
 
     if (o.mode === '7 дней' || o.mode === '7day' || (o.dishesStr && o.dishesStr.includes(' | '))) {
       const dayMap = parse7DayDishes(o.dishesStr);
-      Object.entries(dayMap).forEach(([date, meals]) => {
-        if (dateMap[date] !== undefined) {
-          dateMap[date].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: true, addr, comment: o.comment });
+      Object.entries(dayMap).forEach(([mealKey, meals]) => {
+        // Card identity: phone + meal date key (stable even after drag)
+        const overrideId = (o.phone || '') + '|' + mealKey;
+        let delivKey;
+        if (calOverrides[overrideId]) {
+          delivKey = calOverrides[overrideId];
+        } else {
+          // Delivery day = meal day − 1 (chef cooks & delivers evening before client eats)
+          const mealD = new Date(mealKey + 'T12:00:00Z');
+          mealD.setUTCDate(mealD.getUTCDate() - 1);
+          delivKey = mealD.toISOString().slice(0, 10);
+        }
+        if (dateMap[delivKey] !== undefined) {
+          dateMap[delivKey].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: true, addr, comment: o.comment, overrideId });
         }
       });
     } else {
       const delivDate = normalizeDelivDate(o.deliveryDate);
-      if (delivDate && dateMap[delivDate] !== undefined) {
-        const meals = parse1DayDishes(o.dishesStr);
-        dateMap[delivDate].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: false, addr, comment: o.comment });
+      if (delivDate) {
+        const overrideId = (o.phone || '') + '|' + delivDate;
+        const delivKey = calOverrides[overrideId] || delivDate;
+        if (dateMap[delivKey] !== undefined) {
+          const meals = parse1DayDishes(o.dishesStr);
+          dateMap[delivKey].push({ name: o.name, phone: o.phone, plan: planLabel, meals, is7day: false, addr, comment: o.comment, overrideId });
+        }
       }
     }
   });
@@ -948,7 +969,7 @@ function buildDeliveryCalendar() {
       ? `<span class="cal-count-badge">${cnt} клиент${cnt === 1 ? '' : cnt < 5 ? 'а' : 'ов'}</span>`
       : '';
 
-    html += `<div class="cal-day">
+    html += `<div class="cal-day" data-col-key="${key}">
       <div class="cal-day-hdr${isToday ? ' today-hdr' : ''}">
         ${isToday ? '<span class="cal-today-dot"></span>' : ''}
         ${esc(DAYS_LONG[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS_LONG[d.getMonth()])}
@@ -966,7 +987,7 @@ function buildDeliveryCalendar() {
           .filter(lbl => c.meals && c.meals[lbl])
           .map(lbl => `<div class="cal-meal-row"><span class="cal-meal-lbl">${esc(lbl)}</span><span class="cal-meal-val">${esc(c.meals[lbl])}</span></div>`)
           .join('');
-        html += `<div class="cal-card${cardCls}">
+        html += `<div class="cal-card${cardCls}" draggable="true" data-override-id="${esc(c.overrideId)}">
           <div class="cal-card-hdr">
             <div>
               <div class="cal-name">${esc(c.name || '—')}</div>
@@ -986,6 +1007,40 @@ function buildDeliveryCalendar() {
     html += `</div>`;
   }
   body.innerHTML = html;
+
+  // Drag-and-drop via event delegation on the calendar body
+  body.ondragstart = function(e) {
+    const card = e.target.closest('.cal-card');
+    if (!card) return;
+    e.dataTransfer.setData('text/plain', card.dataset.overrideId || '');
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  body.ondragover = function(e) {
+    const col = e.target.closest('.cal-day');
+    if (!col) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.cal-day.drag-over').forEach(el => el.classList.remove('drag-over'));
+    col.classList.add('drag-over');
+  };
+  body.ondragleave = function(e) {
+    const col = e.target.closest('.cal-day');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+  };
+  body.ondrop = function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.cal-day.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const col = e.target.closest('.cal-day');
+    if (!col) return;
+    const overrideId = e.dataTransfer.getData('text/plain');
+    const newKey = col.dataset.colKey;
+    if (!overrideId || !newKey) return;
+    let ov = {};
+    try { ov = JSON.parse(localStorage.getItem('rf_cal_override_v1') || '{}'); } catch(err) {}
+    ov[overrideId] = newKey;
+    localStorage.setItem('rf_cal_override_v1', JSON.stringify(ov));
+    buildDeliveryCalendar();
+  };
 }
 
 // ─── ЗАКУП И СЕБЕСТОИМОСТЬ ────────────────────────────────────────────────

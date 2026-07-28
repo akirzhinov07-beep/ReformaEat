@@ -2406,7 +2406,7 @@ function get7DayDates() {
   const dates = [];
   const cur = new Date(start);
   while (dates.length < 7) {
-    if (cur.getDay() !== 6) dates.push(new Date(cur)); // пропускаем субботу
+    if (cur.getDay() !== 0) dates.push(new Date(cur)); // пропускаем воскресенье (чит-милл)
     cur.setDate(cur.getDate() + 1);
   }
   return dates;
