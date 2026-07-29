@@ -479,6 +479,36 @@ const APPS_SCRIPT_TOKEN = 'rf_admin_2025_secret';
 const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8Ph-V6-YY0QUB_KGEl9wqSHR5StRjVGw1k-QhQ6LelWfmQQPPC2HoGZXwG_TK1ydPjA/exec';
 let appsScriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_SCRIPT_URL;
 
+// ── Server-side persistence for admin data (overrides + purchase) ──────────
+const ADMIN_DATA_URL   = 'admin-data.php';
+const ADMIN_DATA_TOKEN = 'rf_admin_2025_secret';
+
+async function adminDataGet(key) {
+  try {
+    const r = await fetch(ADMIN_DATA_URL + '?key=' + encodeURIComponent(key), {
+      headers: { 'X-Admin-Token': ADMIN_DATA_TOKEN },
+      cache: 'no-store'
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.ok ? j.data : null;
+  } catch(e) { return null; }
+}
+
+function adminDataSet(key, data) {
+  fetch(ADMIN_DATA_URL + '?key=' + encodeURIComponent(key), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': ADMIN_DATA_TOKEN },
+    body: JSON.stringify(data)
+  }).catch(() => {});
+}
+
+let _purchaseSaveTimer = null;
+function schedulePurchaseSave(d) {
+  clearTimeout(_purchaseSaveTimer);
+  _purchaseSaveTimer = setTimeout(() => adminDataSet('rf_purchase_v1', d), 1500);
+}
+
 const DAYS_RU = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MONTHS_RU = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 const MONTHS_LONG = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -779,6 +809,14 @@ async function loadData() {
     chartEl.appendChild(wrap);
   });
 
+  // Sync persistent admin data from server into localStorage on every login
+  const [svrOverrides, svrPurchase] = await Promise.all([
+    adminDataGet('rf_cal_override_v1'),
+    adminDataGet('rf_purchase_v1')
+  ]);
+  if (svrOverrides) try { localStorage.setItem('rf_cal_override_v1', JSON.stringify(svrOverrides)); } catch(e) {}
+  if (svrPurchase)  try { localStorage.setItem(PURCHASE_KEY, JSON.stringify(svrPurchase)); } catch(e) {}
+
   window._calOrders = orders;
   if (document.getElementById('tab-deliveries') && document.getElementById('tab-deliveries').classList.contains('active')) {
     buildDeliveryCalendar();
@@ -1039,6 +1077,7 @@ function buildDeliveryCalendar() {
     try { ov = JSON.parse(localStorage.getItem('rf_cal_override_v1') || '{}'); } catch(err) {}
     ov[overrideId] = newKey;
     localStorage.setItem('rf_cal_override_v1', JSON.stringify(ov));
+    adminDataSet('rf_cal_override_v1', ov);
     buildDeliveryCalendar();
   };
 }
@@ -1157,7 +1196,7 @@ function getPurchaseData() {
   try { return JSON.parse(localStorage.getItem(PURCHASE_KEY) || 'null') || {weeks:[],prices:{}}; }
   catch(e) { return {weeks:[],prices:{}}; }
 }
-function savePurchaseData(d) { localStorage.setItem(PURCHASE_KEY, JSON.stringify(d)); }
+function savePurchaseData(d) { localStorage.setItem(PURCHASE_KEY, JSON.stringify(d)); schedulePurchaseSave(d); }
 function ingById(id) { return ING.find(i => i.id === id); }
 
 function calcIngCost(ingId, grams, priceMap) {

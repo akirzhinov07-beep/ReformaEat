@@ -1,0 +1,12 @@
+# Block direct browser access to admin data storage files
+<FilesMatch "^rfadmin_">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Apache 2.4 syntax (used if above doesn't apply)
+<IfModule mod_authz_core.c>
+<FilesMatch "^rfadmin_">
+    Require all denied
+</FilesMatch>
+</IfModule>
