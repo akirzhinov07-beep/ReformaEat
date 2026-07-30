@@ -9,6 +9,8 @@
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://drive.google.com"/>
 <link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin/>
+<link rel="preconnect" href="https://docs.google.com" crossorigin/>
+<link rel="dns-prefetch" href="https://docs.google.com"/>
 <meta name="theme-color" content="#f5f3ef"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -1801,10 +1803,20 @@ async function loadMenuFromSheet() {
     }
   } catch(e) {}
 
-  // Нет кеша — показываем UI сразу, меню грузится в фоне
+  // Нет кеша
+  const _noCache_user = JSON.parse(localStorage.getItem('rf_user') || 'null');
+  if (!_noCache_user) {
+    // Новый пользователь — регистрация немедленно, меню в фоне
+    if (loader) loader.style.display = 'none';
+    showModeSelector();
+    if (SHEET_CSV_URL) fetchAndCacheMenu();
+    return;
+  }
+  // Зарегистрирован, но кэша нет — показываем спиннер, ждём меню
+  if (loader) loader.style.display = 'block';
+  if (SHEET_CSV_URL) await fetchAndCacheMenu();
   if (loader) loader.style.display = 'none';
   showModeSelector();
-  if (SHEET_CSV_URL) fetchAndCacheMenu(); // без await — обновит списки когда придёт
 }
 
 async function fetchAndCacheMenu() {

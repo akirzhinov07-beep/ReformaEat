@@ -1,4 +1,4 @@
-const CACHE = 'reforma-v4';
+const CACHE = 'reforma-v5';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -48,6 +48,22 @@ self.addEventListener('fetch', e => {
             if (r && r.status === 200) cache.put(e.request, r.clone());
             return r;
           }).catch(() => cached);
+        })
+      )
+    );
+    return;
+  }
+
+  // index.html — stale-while-revalidate (serve cached instantly, update in background)
+  if (url.pathname === '/' || url.pathname.endsWith('/index.html')) {
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request).then(r => {
+            if (r && r.status === 200) cache.put(e.request, r.clone());
+            return r;
+          }).catch(() => null);
+          return cached || networkFetch;
         })
       )
     );
