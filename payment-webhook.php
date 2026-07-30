@@ -21,6 +21,10 @@ $orderId   = $obj['metadata']['order_id'] ?? '—';
 $name      = $obj['metadata']['name']     ?? '—';
 $phone     = $obj['metadata']['phone']    ?? '—';
 
+function tgH($s) {
+    return str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], (string)$s);
+}
+
 function tgSend($token, $chatId, $text) {
     $ch = curl_init('https://api.telegram.org/bot' . $token . '/sendMessage');
     curl_setopt_array($ch, [
@@ -29,14 +33,19 @@ function tgSend($token, $chatId, $text) {
         CURLOPT_POSTFIELDS     => http_build_query([
             'chat_id'    => $chatId,
             'text'       => $text,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'HTML'
         ]),
         CURLOPT_CONNECTTIMEOUT => 8,
         CURLOPT_TIMEOUT        => 15,
         CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $result = curl_exec($ch);
-    if ($result === false) error_log('tgSend curl error: ' . curl_errno($ch));
+    if ($result === false) {
+        error_log('tgSend curl error: ' . curl_errno($ch));
+    } else {
+        $resp = json_decode($result, true);
+        if (!($resp['ok'] ?? false)) error_log('tgSend API error: ' . $result);
+    }
     curl_close($ch);
 }
 
@@ -47,11 +56,11 @@ $MONTHS_RU = ['января','февраля','марта','апреля','ма�
 if ($event['event'] === 'payment.succeeded') {
 
     // Краткое уведомление об успешной оплате
-    $payMsg = "✅ *Оплата получена — reForma eat*\n\n"
-            . "👤 {$name}  📞 {$phone}\n"
-            . "💰 Сумма: *{$amount} ₽*\n"
-            . "🔖 Заказ: `{$orderId}`\n"
-            . "🔑 Payment: `{$paymentId}`";
+    $payMsg = "✅ <b>Оплата получена — reForma eat</b>\n\n"
+            . "👤 " . tgH($name) . "  📞 " . tgH($phone) . "\n"
+            . "💰 Сумма: <b>" . tgH($amount) . " ₽</b>\n"
+            . "🔖 Заказ: <code>" . tgH($orderId) . "</code>\n"
+            . "🔑 Payment: <code>" . tgH($paymentId) . "</code>";
     tgSend(TG_TOKEN, TG_CHAT, $payMsg);
 
     // Помечаем одноразовый промокод как использованный — читаем из временного файла
@@ -70,9 +79,9 @@ if ($event['event'] === 'payment.succeeded') {
 }
 
 if ($event['event'] === 'payment.canceled') {
-    $msg = "❌ *Оплата отменена*\n\n"
-         . "👤 {$name}  📞 {$phone}\n"
-         . "💰 {$amount} ₽ · Заказ: `{$orderId}`";
+    $msg = "❌ <b>Оплата отменена</b>\n\n"
+         . "👤 " . tgH($name) . "  📞 " . tgH($phone) . "\n"
+         . "💰 " . tgH($amount) . " ₽ · Заказ: <code>" . tgH($orderId) . "</code>";
 
     tgSend(TG_TOKEN, TG_CHAT, $msg);
 
