@@ -1615,7 +1615,7 @@ function startPayment() {
         loading.textContent = 'Нет ответа, повторяем через 3 сек…';
         setTimeout(function() { attemptPayment(attemptsLeft - 1); }, 3000);
       } else {
-        loading.textContent = '⚠️ Нет соединения. Попробуйте позже.';
+        loading.textContent = '⚠️ Нет ответа от сервера. Нажмите «Оплатить» ещё раз.';
         btn.disabled = false;
       }
     });
