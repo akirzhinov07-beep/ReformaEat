@@ -977,9 +977,13 @@ nav{
 .mode-card-sub{font-size:12px;color:var(--ink3);line-height:1.5}
 .mode-card-price{font-family:'Awesome',serif;font-size:22px;font-weight:700;color:var(--coral);margin-top:6px}
 .mode-card-price-sub{font-size:11px;color:var(--ink3);font-weight:300;margin-top:-4px}
+.mode-card-trial-note{font-size:11px;color:var(--ink3);line-height:1.4;margin-top:2px;border-top:1px solid var(--line);padding-top:8px}
+.trial-info-bar{background:var(--blue-bg);border:1px solid rgba(66,133,244,.35);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:13px;color:var(--ink);line-height:1.6}
+.week-delivery-note{margin:0 24px 14px;padding:10px 14px;background:var(--coral-bg);border:1px solid rgba(206,91,64,.3);border-radius:10px;font-size:13px;color:var(--ink);line-height:1.6}
 @media(max-width:500px){
   .mode-cards{grid-template-columns:1fr}
   .mode-card{padding:20px 16px}
+  .week-delivery-note{margin:0 8px 14px}
 }
 /* ── 7-DAY APP ── */
 .week-app{max-width:900px;margin:0 auto;padding:0 0 32px}
@@ -1200,6 +1204,7 @@ nav{
       <div class="mode-card-title">На 1 день</div>
       <div class="mode-card-sub">Выбери блюда на один день — дата доставки определяется автоматически</div>
       <div class="mode-card-price">от 1 390 ₽</div>
+      <div class="mode-card-trial-note">Доступен один раз — чтобы познакомиться с сервисом. Дальнейшие заказы оформляются на 7 дней.</div>
     </button>
     <button class="mode-card week" onclick="selectMode('7day')">
       <div class="mode-card-icon">📅</div>
@@ -1232,6 +1237,7 @@ nav{
         <div class="plan-opt-price" id="w1-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽</div>
       </button>
     </div>
+    <div class="trial-info-bar">ℹ️ Заказ на 1 день — это разовая возможность познакомиться с нашим меню и убедиться в качестве. После первого заказа рационы оформляются на 7 дней — так работает система правильного питания.</div>
     <div id="deliveryInfoBanner" style="background:var(--blue,#2196f3);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;display:none"></div>
     <div class="meal-block" data-meal="breakfast">
       <div class="meal-title-row">
@@ -1419,6 +1425,7 @@ nav{
       <div class="plan-opt-price" id="w7-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
     </button>
   </div>
+  <div class="week-delivery-note">🚚 Доставляем вечером — питание готово с утра следующего дня. Питание на субботу привозим в <b>пятницу вечером</b>: в субботу у нас выходной.</div>
   <div class="week-days-wrap">
     <div class="week-days-cards" id="week-days-cards"></div>
   </div>
