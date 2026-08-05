@@ -1234,7 +1234,7 @@ nav{
           <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
           <div class="plan-opt-kcal-badge">Базовый рацион + доп. порция белка</div>
         </div>
-        <div class="plan-opt-price" id="w1-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽</div>
+        <div class="plan-opt-price" id="w1-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 510 ₽</div>
       </button>
     </div>
     <div class="trial-info-bar">ℹ️ Заказ на 1 день — это разовая возможность познакомиться с нашим меню и убедиться в качестве. После первого заказа рационы оформляются на 7 дней — так работает система правильного питания.</div>
@@ -1422,7 +1422,7 @@ nav{
         <div class="plan-opt-sub">Завтрак · Обед · Ужин · Бустер</div>
         <div class="plan-opt-kcal-badge">Базовый рацион + доп. порция белка</div>
       </div>
-      <div class="plan-opt-price" id="w7-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 520 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
+      <div class="plan-opt-price" id="w7-plan-price-2000"><span style="font-size:13px;font-weight:400">от</span> 1 510 ₽<span style="font-size:14px;font-weight:400">/день</span></div>
     </button>
   </div>
   <div class="week-delivery-note">🚚 Доставляем вечером, за день до употребления. Питание на субботу привозим в <b>пятницу вечером</b>: в субботу у нас выходной.</div>
@@ -1983,14 +1983,14 @@ function updateCalc() {
   const rem=totalTypes-done;
   const allDishDone=done===totalTypes;
   if (plan==='2000') {
-    const boosterExtra = sel.boosters.length > 1 ? sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0) : 0;
-    const price1day = 1520 + boosterExtra;
+    const allBoosterCost = sel.boosters.reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0);
+    const price1day = 1390 + allBoosterCost;
     const priceEl = document.getElementById('w1-plan-price-2000');
     if (priceEl) {
-      if (boosterExtra > 0) {
+      if (allBoosterCost > 0) {
         priceEl.innerHTML = price1day.toLocaleString('ru') + ' ₽';
       } else {
-        priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 520 ₽';
+        priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 510 ₽';
       }
     }
   }
@@ -2243,10 +2243,10 @@ function tryOrder() {
   if (plan==='2000' && sel.boosters.length>0) {
     const bNames=sel.boosters.map(id=>{const d=(MENU['booster']||[]).find(x=>x.id===id);return d?d.name:'';}).filter(Boolean);
     lines+=`Бустер: ${bNames.join(' + ')}<br>`;
-    if(sel.boosters.length>1) { const _bExtra=sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0); lines+=`<span style="color:var(--ink3);font-size:12px">+${_bExtra} ₽ за доп. бустеры</span><br>`; }
+    if(sel.boosters.length>0) { const _bCost=sel.boosters.reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0); lines+=`<span style="color:var(--ink3);font-size:12px">бустеры: ${_bCost} ₽</span><br>`; }
   }
-  const boosterExtra = plan==='2000' ? (sel.boosters.length>1?sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0):0) : 0;
-  const amount1day = (plan==='2000' ? 1520 : 1390) + boosterExtra;
+  const boosterCost = plan==='2000' ? sel.boosters.reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0) : 0;
+  const amount1day = 1390 + boosterCost;
   const discountAmt = applyPromoDiscount(promoData, amount1day, '1day');
   const totalAmt = Math.max(0, amount1day - discountAmt);
   document.getElementById('modalSummary').innerHTML=lines;
@@ -2369,7 +2369,7 @@ function backToMode() {
    ══════════════════════════════════════════════════ */
 let plan7 = '1600';
 let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
-const PLAN_PRICE = {'1600':1390, '2000':1520};
+const PLAN_PRICE = {'1600':1390, '2000':1390}; // базовая цена без бустеров; каждый бустер добавляет свою цену
 const BOOSTER_EXTRA_PRICE = {bo3: 135, bo4: 150}; // Креветки +135, Форель +150; остальные +120
 const DELIVERY_COSTS = {'нальчик':150,'нарткала':400,'баксан':400,'чегем':250,'шалушка':200,'нартан':200};
 function getDeliveryCost(city) {
@@ -2595,10 +2595,8 @@ function get7Counts() {
 
 function get7ExtraBoosterCost() {
   if (plan7 !== '2000') return 0;
-  return sel7.reduce((sum, day) => {
-    const ids = day.boosters || [];
-    return sum + (ids.length > 1 ? ids.slice(1).reduce((s,id) => s+(BOOSTER_EXTRA_PRICE[id]||120), 0) : 0);
-  }, 0);
+  return sel7.reduce((sum, day) =>
+    sum + (day.boosters||[]).reduce((s,id) => s+(BOOSTER_EXTRA_PRICE[id]||120), 0), 0);
 }
 
 function update7Progress() {
@@ -2612,7 +2610,7 @@ function update7Progress() {
   if (plan7 === '2000') {
     const priceEl = document.getElementById('w7-plan-price-2000');
     if (priceEl) {
-      priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 520 ₽<span style="font-size:14px;font-weight:400">/день</span>';
+      priceEl.innerHTML = '<span style="font-size:13px;font-weight:400">от</span> 1 510 ₽<span style="font-size:14px;font-weight:400">/день</span>';
     }
   }
   const hintEl = document.getElementById('week-progress-hint');
