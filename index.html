@@ -1707,7 +1707,7 @@ const _MENU_FALLBACK_UNUSED = {
     {id:'bo1',name:'Куриное филе запечённое + кукуруза',kcal:225,p:20,f:10,c:12,day:'',w:'120 г',photo_id:'1VV59LVMkM-pdlae144xVmiBDhMnr9FQG'},
     {id:'bo2',name:'Яйца варёные (2 шт.) + зеленый горошек',kcal:210,p:17,f:10,c:8,day:'',w:'2 шт.',photo_id:'1YnMwyAI8PzfCs7Z-6EQPzhr6UzQRb5R8'},
     {id:'bo3',name:'Креветки',kcal:95,p:22,f:11,c:0,day:'',w:'100 г',photo_id:'1zeUglOE7-NCyK-EeFxJX3fJvlg3e0Yzs'},
-    {id:'bo4',name:'Форель запеченная + зеленый горошек',kcal:235,p:24,f:11,c:8,day:'',w:'120 г',photo_id:'1nBwFidjQUNKe7IbNbhfhCwT4cYrIkgT_'},
+    {id:'bo4',name:'Форель запеченная + зеленый горошек',kcal:235,p:24,f:11,c:8,day:'День 3',w:'120 г',photo_id:'1nBwFidjQUNKe7IbNbhfhCwT4cYrIkgT_'},
   ],
 }; // _MENU_FALLBACK_UNUSED
 
@@ -1875,10 +1875,12 @@ function buildList(type) {
   const el = document.getElementById('list-'+type);
   el.innerHTML = '';
   const isBoost = type==='booster';
-  // For regular meals: show only dishes matching today's 2 menus
-  const dishes = (isBoost || type === 'snack')
+  // Boosters with a day field are day-limited (e.g. форель 2×/week); empty day = every day
+  const dishes = (type === 'snack')
     ? (MENU[type]||[])
-    : (MENU[type]||[]).filter(d => todayMenus.includes(d.day));
+    : (isBoost
+        ? (MENU[type]||[]).filter(d => !d.day || todayMenus.includes(d.day))
+        : (MENU[type]||[]).filter(d => todayMenus.includes(d.day)));
   dishes.forEach(d => {
     const on = isBoost ? sel.boosters.includes(d.id) : sel[type]===d.id;
     const row = document.createElement('div');
@@ -2509,8 +2511,11 @@ function build7DayUI() {
       col.appendChild(lbl);
 
       let dishes;
-      if (mealType === 'booster' || mealType === 'snack') {
+      if (mealType === 'snack') {
         dishes = MENU[mealType] || [];
+      } else if (mealType === 'booster') {
+        // Boosters with empty day show every day; with day set — only on matching days
+        dishes = (MENU[mealType] || []).filter(d => !d.day || menus.includes(d.day));
       } else {
         dishes = (MENU[mealType] || []).filter(d => menus.includes(d.day));
       }
@@ -2536,32 +2541,12 @@ function build7DayUI() {
 
   update7Progress();
   updateOrderBtn7();
-  setTimeout(updateBo4LimitUI, 0); // DOM уже обновлён
-}
-
-const BO4_WEEK_MAX = 2; // Форель — максимум 2 раза за 7 дней
-
-function updateBo4LimitUI() {
-  const total = sel7.reduce((cnt, day) => cnt + ((day.boosters||[]).includes('bo4') ? 1 : 0), 0);
-  document.querySelectorAll('.w7-dish[data-id="bo4"]').forEach(tile => {
-    const card = tile.closest('.week-day-card');
-    const dIdx = card ? parseInt(card.dataset.dayIdx) : -1;
-    const isOn = dIdx >= 0 && (sel7[dIdx].boosters||[]).includes('bo4');
-    const maxed = total >= BO4_WEEK_MAX && !isOn;
-    tile.style.opacity = maxed ? '0.4' : '';
-    tile.style.pointerEvents = maxed ? 'none' : '';
-    tile.title = maxed ? 'Форель можно выбрать максимум 2 раза за неделю' : '';
-  });
 }
 
 function pick7(dayIdx, mealType, dishId, colEl) {
   if (mealType === 'booster') {
     const bArr = sel7[dayIdx].boosters;
     const pos = bArr.indexOf(dishId);
-    if (pos < 0 && dishId === 'bo4') {
-      const total = sel7.reduce((cnt, day) => cnt + ((day.boosters||[]).includes('bo4') ? 1 : 0), 0);
-      if (total >= BO4_WEEK_MAX) return;
-    }
     if (pos >= 0) bArr.splice(pos, 1); else bArr.push(dishId);
     colEl.querySelectorAll('.w7-dish').forEach(tile => {
       tile.classList.toggle('on', bArr.includes(tile.dataset.id));
@@ -2598,7 +2583,6 @@ function pick7(dayIdx, mealType, dishId, colEl) {
   }
   update7Progress();
   updateOrderBtn7();
-  updateBo4LimitUI();
 }
 
 function get7Counts() {
