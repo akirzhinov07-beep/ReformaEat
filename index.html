@@ -1983,7 +1983,7 @@ function updateCalc() {
   const rem=totalTypes-done;
   const allDishDone=done===totalTypes;
   if (plan==='2000') {
-    const boosterExtra = Math.max(0, sel.boosters.length - 1) * 120;
+    const boosterExtra = sel.boosters.length > 1 ? sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0) : 0;
     const price1day = 1520 + boosterExtra;
     const priceEl = document.getElementById('w1-plan-price-2000');
     if (priceEl) {
@@ -2243,9 +2243,9 @@ function tryOrder() {
   if (plan==='2000' && sel.boosters.length>0) {
     const bNames=sel.boosters.map(id=>{const d=(MENU['booster']||[]).find(x=>x.id===id);return d?d.name:'';}).filter(Boolean);
     lines+=`Бустер: ${bNames.join(' + ')}<br>`;
-    if(sel.boosters.length>1) lines+=`<span style="color:var(--ink3);font-size:12px">+${(sel.boosters.length-1)*120} ₽ за доп. бустеры</span><br>`;
+    if(sel.boosters.length>1) { const _bExtra=sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0); lines+=`<span style="color:var(--ink3);font-size:12px">+${_bExtra} ₽ за доп. бустеры</span><br>`; }
   }
-  const boosterExtra = plan==='2000' ? Math.max(0, sel.boosters.length-1)*120 : 0;
+  const boosterExtra = plan==='2000' ? (sel.boosters.length>1?sel.boosters.slice(1).reduce((s,id)=>s+(BOOSTER_EXTRA_PRICE[id]||120),0):0) : 0;
   const amount1day = (plan==='2000' ? 1520 : 1390) + boosterExtra;
   const discountAmt = applyPromoDiscount(promoData, amount1day, '1day');
   const totalAmt = Math.max(0, amount1day - discountAmt);
@@ -2370,6 +2370,7 @@ function backToMode() {
 let plan7 = '1600';
 let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
 const PLAN_PRICE = {'1600':1390, '2000':1520};
+const BOOSTER_EXTRA_PRICE = {bo3: 135, bo4: 150}; // Креветки +135, Форель +150; остальные +120
 const DELIVERY_COSTS = {'нальчик':150,'нарткала':400,'баксан':400,'чегем':250,'шалушка':200,'нартан':200};
 function getDeliveryCost(city) {
   return DELIVERY_COSTS[(city||'').toLowerCase().trim()] || 150;
@@ -2535,12 +2536,32 @@ function build7DayUI() {
 
   update7Progress();
   updateOrderBtn7();
+  setTimeout(updateBo4LimitUI, 0); // DOM уже обновлён
+}
+
+const BO4_WEEK_MAX = 2; // Форель — максимум 2 раза за 7 дней
+
+function updateBo4LimitUI() {
+  const total = sel7.reduce((cnt, day) => cnt + ((day.boosters||[]).includes('bo4') ? 1 : 0), 0);
+  document.querySelectorAll('.w7-dish[data-id="bo4"]').forEach(tile => {
+    const card = tile.closest('.week-day-card');
+    const dIdx = card ? parseInt(card.dataset.dayIdx) : -1;
+    const isOn = dIdx >= 0 && (sel7[dIdx].boosters||[]).includes('bo4');
+    const maxed = total >= BO4_WEEK_MAX && !isOn;
+    tile.style.opacity = maxed ? '0.4' : '';
+    tile.style.pointerEvents = maxed ? 'none' : '';
+    tile.title = maxed ? 'Форель можно выбрать максимум 2 раза за неделю' : '';
+  });
 }
 
 function pick7(dayIdx, mealType, dishId, colEl) {
   if (mealType === 'booster') {
     const bArr = sel7[dayIdx].boosters;
     const pos = bArr.indexOf(dishId);
+    if (pos < 0 && dishId === 'bo4') {
+      const total = sel7.reduce((cnt, day) => cnt + ((day.boosters||[]).includes('bo4') ? 1 : 0), 0);
+      if (total >= BO4_WEEK_MAX) return;
+    }
     if (pos >= 0) bArr.splice(pos, 1); else bArr.push(dishId);
     colEl.querySelectorAll('.w7-dish').forEach(tile => {
       tile.classList.toggle('on', bArr.includes(tile.dataset.id));
@@ -2577,6 +2598,7 @@ function pick7(dayIdx, mealType, dishId, colEl) {
   }
   update7Progress();
   updateOrderBtn7();
+  updateBo4LimitUI();
 }
 
 function get7Counts() {
@@ -2594,7 +2616,10 @@ function get7Counts() {
 
 function get7ExtraBoosterCost() {
   if (plan7 !== '2000') return 0;
-  return sel7.reduce((sum, day) => sum + Math.max(0, (day.boosters||[]).length - 1) * 120, 0);
+  return sel7.reduce((sum, day) => {
+    const ids = day.boosters || [];
+    return sum + (ids.length > 1 ? ids.slice(1).reduce((s,id) => s+(BOOSTER_EXTRA_PRICE[id]||120), 0) : 0);
+  }, 0);
 }
 
 function update7Progress() {
