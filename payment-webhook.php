@@ -55,25 +55,109 @@ $MONTHS_RU = ['января','февраля','марта','апреля','ма�
 
 if ($event['event'] === 'payment.succeeded') {
 
-    // Краткое уведомление об успешной оплате
-    $payMsg = "✅ <b>Оплата получена — reForma eat</b>\n\n"
-            . "👤 " . tgH($name) . "  📞 " . tgH($phone) . "\n"
-            . "💰 Сумма: <b>" . tgH($amount) . " ₽</b>\n"
-            . "🔖 Заказ: <code>" . tgH($orderId) . "</code>\n"
-            . "🔑 Payment: <code>" . tgH($paymentId) . "</code>";
-    tgSend(TG_TOKEN, TG_CHAT, $payMsg);
-
-    // Помечаем одноразовый промокод как использованный — читаем из временного файла
-    $tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rforder_' . $orderId . '.json';
+    // Читаем временный файл с полным заказом ДО отправки уведомления
+    $tmpFile   = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rforder_' . $orderId . '.json';
+    $orderData = null;
     if (file_exists($tmpFile)) {
         $orderData = json_decode(file_get_contents($tmpFile), true);
         @unlink($tmpFile);
-        if ($orderData) {
-            $oPromo = $orderData['promo'] ?? '';
-            $oPhone = $orderData['phone'] ?? $phone;
-            if ($oPromo && promoIsOneTime($oPromo)) {
-                promoMarkUsed($oPhone, $oPromo);
+    }
+
+    // Строим уведомление об оплате
+    $mode = $orderData['mode'] ?? '1day';
+
+    if ($mode === '7day') {
+        $plan = $orderData['plan'] ?? '';
+        $city    = $orderData['city']    ?? '';
+        $street  = $orderData['street']  ?? '';
+        $house   = $orderData['house']   ?? '';
+        $apt     = $orderData['apt']     ?? '';
+        $comment = $orderData['comment'] ?? '';
+        $promo   = $orderData['promo']   ?? '';
+        $discount= $orderData['discount'] ?? 0;
+        $days    = $orderData['days']    ?? [];
+
+        $payMsg = "✅ <b>Оплата — 7 дней — reForma eat</b>\n\n"
+                . "👤 " . tgH($name) . "  📞 " . tgH($phone) . "\n"
+                . "💰 Сумма: <b>" . tgH($amount) . " ₽</b>\n"
+                . "🥗 План: " . tgH($plan) . "\n";
+
+        if ($promo)   $payMsg .= "🎟 Промокод: " . tgH($promo) . ($discount ? " (−" . tgH($discount) . " ₽)" : '') . "\n";
+        if ($city)    $payMsg .= "📍 " . tgH($city) . ($street ? ', ' . tgH($street) : '') . ($house ? ', д. ' . tgH($house) : '') . ($apt ? ', кв. ' . tgH($apt) : '') . "\n";
+        if ($comment) $payMsg .= "💬 " . tgH($comment) . "\n";
+        $payMsg .= "🔖 <code>" . tgH($orderId) . "</code>\n\n";
+
+        foreach ($days as $wd) {
+            $dateStr = $wd['date'] ?? '';
+            if ($dateStr) {
+                try {
+                    $d      = new DateTime($dateStr . 'T00:00:00');
+                    $wdow   = (int)$d->format('w');
+                    $wday   = (int)$d->format('j');
+                    $wmonth = (int)$d->format('n') - 1;
+                    $label  = $DAYS_RU[$wdow] . ', ' . $wday . ' ' . $MONTHS_RU[$wmonth];
+                } catch (Exception $e) { $label = $dateStr; }
+            } else {
+                $label = '—';
             }
+            $payMsg .= "📅 <b>{$label}:</b>\n";
+            foreach (($wd['dishes'] ?? []) as $type => $dish) {
+                $payMsg .= "  • " . tgH($type) . ": " . tgH($dish) . "\n";
+            }
+            $payMsg .= "\n";
+        }
+
+    } else {
+        // 1-day
+        $plan         = $orderData['plan']         ?? '';
+        $deliveryDate = $orderData['deliveryDate'] ?? '';
+        $city         = $orderData['city']         ?? '';
+        $street       = $orderData['street']       ?? '';
+        $house        = $orderData['house']        ?? '';
+        $apt          = $orderData['apt']          ?? '';
+        $comment      = $orderData['comment']      ?? '';
+        $promo        = $orderData['promo']        ?? '';
+        $discount     = $orderData['discount']     ?? 0;
+        $dishes       = $orderData['dishes']       ?? [];
+
+        $deliveryLabel = $deliveryDate;
+        if ($deliveryDate) {
+            try {
+                $dd      = new DateTime($deliveryDate . 'T00:00:00');
+                $ddow    = (int)$dd->format('w');
+                $dday    = (int)$dd->format('j');
+                $dmonth  = (int)$dd->format('n') - 1;
+                $deliveryLabel = $DAYS_RU[$ddow] . ', ' . $dday . ' ' . $MONTHS_RU[$dmonth];
+            } catch (Exception $e) {}
+        }
+
+        $payMsg = "✅ <b>Оплата — 1 день — reForma eat</b>\n\n"
+                . "👤 " . tgH($name) . "  📞 " . tgH($phone) . "\n"
+                . "💰 Сумма: <b>" . tgH($amount) . " ₽</b>\n"
+                . "🥗 План: " . tgH($plan) . "\n"
+                . "📅 Доставка: " . tgH($deliveryLabel) . "\n";
+
+        if ($promo)   $payMsg .= "🎟 Промокод: " . tgH($promo) . ($discount ? " (−" . tgH($discount) . " ₽)" : '') . "\n";
+        if ($city)    $payMsg .= "📍 " . tgH($city) . ($street ? ', ' . tgH($street) : '') . ($house ? ', д. ' . tgH($house) : '') . ($apt ? ', кв. ' . tgH($apt) : '') . "\n";
+        if ($comment) $payMsg .= "💬 " . tgH($comment) . "\n";
+        $payMsg .= "🔖 <code>" . tgH($orderId) . "</code>\n";
+
+        if (!empty($dishes)) {
+            $payMsg .= "\n<b>Блюда:</b>\n";
+            foreach ($dishes as $type => $dish) {
+                $payMsg .= "  • " . tgH($type) . ": " . tgH($dish) . "\n";
+            }
+        }
+    }
+
+    tgSend(TG_TOKEN, TG_CHAT, $payMsg);
+
+    // Помечаем одноразовый промокод как использованный
+    if ($orderData) {
+        $oPromo = $orderData['promo'] ?? '';
+        $oPhone = $orderData['phone'] ?? $phone;
+        if ($oPromo && promoIsOneTime($oPromo)) {
+            promoMarkUsed($oPhone, $oPromo);
         }
     }
 }
