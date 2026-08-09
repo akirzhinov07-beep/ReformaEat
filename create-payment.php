@@ -4,6 +4,7 @@
  * POST /create-payment.php
  * Body: { orderId, amount, description, name, phone, order }
  */
+set_time_limit(20);
 header('Content-Type: application/json; charset=utf-8');
 
 $allowed_origins = ['https://reformaeat.ru', 'https://www.reformaeat.ru'];
@@ -200,7 +201,7 @@ curl_setopt_array($ch, [
         'Idempotence-Key: ' . $idempotenceKey
     ],
     CURLOPT_CONNECTTIMEOUT => 10,
-    CURLOPT_TIMEOUT        => 25,
+    CURLOPT_TIMEOUT        => 12,
     CURLOPT_SSL_VERIFYPEER => true,
 ]);
 
