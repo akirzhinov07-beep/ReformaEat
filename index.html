@@ -1605,7 +1605,15 @@ function startPayment() {
       body: body,
       signal: ctrl.signal
     })
-    .then(function(r) { clearTimeout(tid); return r.json(); })
+    .then(function(r) {
+      clearTimeout(tid);
+      return r.text().then(function(txt) {
+        try { return JSON.parse(txt); }
+        catch(e) {
+          throw {_httpStatus: r.status, _notJson: true};
+        }
+      });
+    })
     .then(function(data) {
       if (data.ok && data.confirmation_url) {
         localStorage.setItem('rf_success_order', JSON.stringify({
@@ -1622,8 +1630,13 @@ function startPayment() {
         btn.disabled = false;
       }
     })
-    .catch(function() {
+    .catch(function(err) {
       clearTimeout(tid);
+      if (err && err._notJson && attemptsLeft === 0) {
+        loading.textContent = '⚠️ Ошибка сервера (' + (err._httpStatus||'?') + '). Попробуйте позже.';
+        btn.disabled = false;
+        return;
+      }
       if (attemptsLeft > 0) {
         loading.textContent = 'Нет ответа, повторяем через 3 сек…';
         setTimeout(function() { attemptPayment(attemptsLeft - 1); }, 3000);
