@@ -1369,7 +1369,7 @@ nav{
         <div class="delivery-costs-block">
           <div class="delivery-costs-title">🚚 Доставка</div>
           <div class="delivery-costs-subtitle">Оплачивается отдельно курьеру при получении</div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">150 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">200 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Чегем</span><span class="delivery-cost-price">250 ₽</span></div>
@@ -1488,7 +1488,7 @@ nav{
         <div class="delivery-costs-block">
           <div class="delivery-costs-title">🚚 Доставка</div>
           <div class="delivery-costs-subtitle">Оплачивается отдельно курьеру при получении</div>
-          <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">150 ₽</span></div>
+          <div class="delivery-cost-row"><span class="delivery-cost-city">Нальчик</span><span class="delivery-cost-price">200 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Нарткала</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Баксан</span><span class="delivery-cost-price">400 ₽</span></div>
           <div class="delivery-cost-row"><span class="delivery-cost-city">Чегем</span><span class="delivery-cost-price">250 ₽</span></div>
@@ -2388,9 +2388,9 @@ let plan7 = '1600';
 let sel7 = Array.from({length:7}, () => ({breakfast:null,lunch:null,dinner:null,boosters:[]}));
 const PLAN_PRICE = {'1600':1390, '2000':1390}; // базовая цена без бустеров; каждый бустер добавляет свою цену
 const BOOSTER_EXTRA_PRICE = {bo3: 135, bo4: 150}; // Креветки +135, Форель +150; остальные +120
-const DELIVERY_COSTS = {'нальчик':150,'нарткала':400,'баксан':400,'чегем':250,'шалушка':200,'нартан':200};
+const DELIVERY_COSTS = {'нальчик':200,'нарткала':400,'баксан':400,'чегем':250,'шалушка':200,'нартан':200};
 function getDeliveryCost(city) {
-  return DELIVERY_COSTS[(city||'').toLowerCase().trim()] || 150;
+  return DELIVERY_COSTS[(city||'').toLowerCase().trim()] || 200;
 }
 function formatOrderRef(oid) {
   const digits = String(oid||'').replace(/\D/g,'');
